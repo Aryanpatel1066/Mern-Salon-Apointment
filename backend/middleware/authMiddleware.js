@@ -2,19 +2,31 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User.model"); // Corrected model import
 
 // Middleware to verify JWT token (Protect Routes)
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
     const token = req.header("Authorization");
 
-    if (!token) return res.status(401).json({ message: "Access Denied. No Token Provided." });
+    if (!token) {
+        return res.status(401).json({ message: "Access Denied. No Token Provided." });
+    }
 
     try {
         const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-        req.user = decoded;
+        console.log("Decoded Token:", decoded);  // ✅ Log decoded token
+
+        const user = await User.findById(decoded.userId);
+        console.log("User Found in DB:", user);  // ✅ Log fetched user
+
+        if (!user) return res.status(401).json({ message: "User not found" });
+
+        req.user = { id: user._id, role: user.role }; // ✅ Ensure role is present
         next();
     } catch (error) {
+        console.error("JWT Verification Error:", error);
         res.status(401).json({ message: "Invalid Token" });
     }
 };
+
+
 
 // Middleware to Validate Signup Request
 const verifySignupBody = async (req, res, next) => {
@@ -57,9 +69,17 @@ const verifySignInBody = async (req,res,next) =>{
         })
     }
 }
+// Middleware to check if user is an admin
+const isAdmin = (req, res, next) => {
+    if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({ message: "Access Denied. Admins only." });
+    }
+    next();
+};
 // Export both middlewares correctly
 module.exports = {
     authMiddleware,
     verifySignupBody,
-    verifySignInBody
+    verifySignInBody,
+    isAdmin
 };
