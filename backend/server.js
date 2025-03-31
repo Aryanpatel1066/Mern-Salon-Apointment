@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
 });
 app.use("/api/users", require("./routes/auth.route"));
 app.use("/api/services", require("./routes/service.route")); // ✅ Added services route
-
+app.use("/api/booking",require('./routes/booking.route'))
 // Start Server on Port from .env
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
