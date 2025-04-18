@@ -30,23 +30,42 @@ exports.getAllBookings = async (req, res) => {
         res.status(500).json({ message: "Error fetching bookings", error });
     }
 };
+// get all booking (user )
+const mongoose = require("mongoose");
 
-// Get a single booking by ID (User & Admin)
-exports.getBookingById = async (req, res) => {
+exports.getBookingsByUser = async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.id).populate("user service");
-        if (!booking) return res.status(404).json({ message: "Booking not found" });
+        console.log("Received Params:", req.params);
 
-        // Only allow user to see their booking, or admin can see all
-        if (req.user.role !== "admin" && booking.user._id.toString() !== req.user.id) {
-            return res.status(403).json({ message: "Unauthorized access" });
+        const userId = req.params.userId;
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is missing in request" });
         }
 
-        res.status(200).json(booking);
+        console.log("Fetching bookings for user:", userId);
+
+        const bookings = await Booking.find({ user: new mongoose.Types.ObjectId(userId) })
+            .populate("user service");
+
+        if (bookings.length === 0) {
+            return res.status(404).json({ message: "No bookings found for this user" });
+        }
+
+        // ✅ Remove password before sending the response
+        const sanitizedBookings = bookings.map(booking => {
+            const user = { ...booking.user._doc };
+            delete user.password; // Remove password from response
+            return { ...booking._doc, user };
+        });
+
+        res.status(200).json(sanitizedBookings);
     } catch (error) {
-        res.status(500).json({ message: "Error fetching booking", error });
+        console.error("Error fetching user bookings:", error);
+        res.status(500).json({ message: "Error fetching bookings", error });
     }
 };
+ 
+
 
 // Update a booking (User can update only their own, Admin can update any)
 exports.updateBooking = async (req, res) => {

@@ -5,7 +5,7 @@ const {authMiddleware ,isAdmin} = require("../middleware/authMiddleware");
  
 // User Routes
 router.post("/", authMiddleware, bookingController.createBooking);
-router.get("/:id", authMiddleware, bookingController.getBookingById);
+router.get("/user/:userId",authMiddleware,bookingController.getBookingsByUser)
 router.put("/:id", authMiddleware, bookingController.updateBooking);
 router.delete("/:id", authMiddleware, bookingController.deleteBooking);
 

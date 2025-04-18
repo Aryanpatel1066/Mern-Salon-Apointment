@@ -40,18 +40,7 @@ const getAllServices = async (req, res) => {
     }
 };
 
-// ✅ Get a single service by ID
-const getServiceById = async (req, res) => {
-    try {
-        const service = await Service.findById(req.params.id);
-        if (!service) {
-            return res.status(404).json({ message: "Service not found" });
-        }
-        res.status(200).json(service);
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching service", error: error.message });
-    }
-};
+ 
 
 // ✅ Update a service
 const updateService = async (req, res) => {
@@ -82,7 +71,6 @@ const deleteService = async (req, res) => {
 module.exports = {
     createService,
     getAllServices,
-    getServiceById,
-    updateService,
+     updateService,
     deleteService
 };

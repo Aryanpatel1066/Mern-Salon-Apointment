@@ -11,6 +11,6 @@ router.post("/register", verifySignupBody, registerUser); // ✅ Fixed Middlewar
 router.post("/login", verifySignInBody,loginUser);
 
 // Protected Routes (Require Token)
-router.get("/profile", authMiddleware, getUserProfile);
+router.get("/profile/:id", authMiddleware, getUserProfile);
 
 module.exports = router;

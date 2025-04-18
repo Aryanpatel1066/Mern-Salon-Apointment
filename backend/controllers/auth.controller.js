@@ -43,12 +43,12 @@ const loginUser = async (req, res) => {
 
         // Compare password
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: "Invalid Credentials" });
+        if (!isMatch) return res.status(400).json({ message: "wrong password" });
 
         // Generate JWT token
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-        res.status(200).json({ message: "Login Successful", token });
+        res.status(200).json({ message: "Login Successful", token ,user});
     } catch (error) {
         res.status(500).json({ message: "Server Error", error: error.message });
     }
@@ -59,7 +59,9 @@ const loginUser = async (req, res) => {
 // @access  Private
 const getUserProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId).select("-password"); // Exclude password
+        const userId = req.params.id;
+
+        const user = await User.findById(userId).select("-password");  
         if (!user) return res.status(404).json({ message: "User not found" });
 
         res.status(200).json(user);
