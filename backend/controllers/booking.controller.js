@@ -2,11 +2,13 @@ const Booking = require("../models/Booking.model");
 const User = require("../models/User.model");
 const Service = require("../models/Service.model");
 
-// Create a new booking (User only)
+//done Create a new booking (User only)
+  
+  
 exports.createBooking = async (req, res) => {
     try {
         const { service, date, timeSlot } = req.body;
-        const user = req.user.id; // Get logged-in user ID
+        const user = req.user.id;
 
         const existingService = await Service.findById(service);
         if (!existingService) {
@@ -15,11 +17,20 @@ exports.createBooking = async (req, res) => {
 
         const booking = new Booking({ user, service, date, timeSlot });
         await booking.save();
-        res.status(201).json(booking);
+
+        // ✅ Proper population after save
+        const populatedBooking = await Booking.findById(booking._id)
+            .populate('user', 'name email')
+            .populate('service', 'name description');
+
+        res.status(201).json(populatedBooking);
     } catch (error) {
-        res.status(500).json({ message: "Error creating booking", error });
+        res.status(500).json({ message: "Error creating booking", error: error.message });
     }
 };
+
+
+
 
 // Get all bookings (Admin only)
 exports.getAllBookings = async (req, res) => {
@@ -30,6 +41,7 @@ exports.getAllBookings = async (req, res) => {
         res.status(500).json({ message: "Error fetching bookings", error });
     }
 };
+
 // get all booking (user )
 const mongoose = require("mongoose");
 
@@ -104,7 +116,7 @@ exports.updateBookingStatus = async (req, res) => {
     }
 };
 
-// Delete a booking (User can delete only their own, Admin can delete any)
+// Delete a booking ADmin only
 exports.deleteBooking = async (req, res) => {
     try {
         const booking = await Booking.findById(req.params.id);

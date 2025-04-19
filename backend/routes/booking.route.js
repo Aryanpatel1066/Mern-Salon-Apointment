@@ -6,11 +6,11 @@ const {authMiddleware ,isAdmin} = require("../middleware/authMiddleware");
 // User Routes
 router.post("/", authMiddleware, bookingController.createBooking);
 router.get("/user/:userId",authMiddleware,bookingController.getBookingsByUser)
-router.put("/:id", authMiddleware, bookingController.updateBooking);
+// Admin Routes
+
 router.delete("/:id", authMiddleware, bookingController.deleteBooking);
 
-// Admin Routes
 router.get("/", authMiddleware, isAdmin, bookingController.getAllBookings);
 router.patch("/:id/status", authMiddleware, isAdmin, bookingController.updateBookingStatus);
-
+// router.put("/:id", authMiddleware, bookingController.updateBooking);
 module.exports = router;
