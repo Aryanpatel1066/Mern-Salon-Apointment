@@ -5,11 +5,22 @@ const cors = require("cors");
 const initAdmin = require('./utils/initAdmin') 
 dotenv.config();  
 connectDB(); // Connect to MongoDB
-
 const app = express();
-app.use(express.json()); // Middleware to parse JSON requests
-app.use(cors()); // Enable CORS
- initAdmin()
+app.use(express.json());  
+const corsOptions = {
+    origin: "http://localhost:5173" ,  
+    methods: ["GET", "POST", "PUT", "DELETE"],   
+    allowedHeaders: ["Content-Type", "Authorization"],  
+    credentials: true, // Required for cookies/auth headers
+  //origin :http://localhost:5173
+  };
+  
+  // Apply CORS middleware globally
+  app.use(cors(corsOptions));
+  
+
+ 
+initAdmin()
 // Test Route
 app.get("/", (req, res) => {
     res.send("🚀 Salon Booking API is Running...");
