@@ -1,13 +1,14 @@
  .slider-container {
     max-width: 1320px;  
-    margin: 1.7rem auto;
-    aspect-ratio: 16 / 9;  
-
+    margin-top: 1.7rem;
+    /* aspect-ratio: 16 / 9;   */
+border:2px solid red;
   }
   
   .slider-container img {
     height: 450px;
     object-fit: cover;
     width: 100%;
+    border:2px solid blue;
   }
    

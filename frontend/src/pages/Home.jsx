@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import ServiceList from "./ServiceList";
 import Slider from "./Slider";
 
 function Home(){
@@ -6,7 +7,8 @@ function Home(){
         <>
          <Navbar/>
          <Slider/>
-        </>
+         <ServiceList limit={5} />
+         </>
     )
 }
 export default Home;
