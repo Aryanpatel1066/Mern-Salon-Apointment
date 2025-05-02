@@ -8,7 +8,7 @@ import Register from '../pages/Register';
 import Booking from '../pages/Booking';
 import Profile from '../pages/Profile';
 import AdminDashboard from '../pages/AdminDashboard';
-
+import ServicesPage from '../pages/ServicePage';
   
 const AppRoutes = () => {
   return (
@@ -19,6 +19,7 @@ const AppRoutes = () => {
           <Route path="/booking" element={<Booking />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/services" element={<ServicesPage/>}/>
         </Routes>
    );
 };

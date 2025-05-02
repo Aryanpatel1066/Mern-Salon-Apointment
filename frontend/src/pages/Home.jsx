@@ -1,5 +1,6 @@
+import FAQ from "../components/FAQ";
 import Navbar from "../components/Navbar";
-import ServiceList from "./ServiceList";
+import ServiceList from "../components/ServiceList";
 import Slider from "./Slider";
 
 function Home(){
@@ -8,6 +9,7 @@ function Home(){
          <Navbar/>
          <Slider/>
          <ServiceList limit={5} />
+         <FAQ/>
          </>
     )
 }
