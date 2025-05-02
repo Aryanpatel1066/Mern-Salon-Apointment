@@ -5,30 +5,58 @@ const Service = require("../models/Service.model");
 //done Create a new booking (User only)
   
   
+// exports.createBooking = async (req, res) => {
+//     try {
+//         const { service, date, timeSlot } = req.body;
+//         const user = req.user.id;
+
+//         const existingService = await Service.findById(service);
+//         if (!existingService) {
+//             return res.status(404).json({ message: "Service not found" });
+//         }
+
+//         const booking = new Booking({ user, service, date, timeSlot });
+//         await booking.save();
+
+//         // ✅ Proper population after save
+//         const populatedBooking = await Booking.findById(booking._id)
+//             .populate('user', 'name email')
+//             .populate('service', 'name description');
+
+//         res.status(201).json(populatedBooking);
+//     } catch (error) {
+//         res.status(500).json({ message: "Error creating booking", error: error.message });
+//     }
+// };
 exports.createBooking = async (req, res) => {
     try {
-        const { service, date, timeSlot } = req.body;
-        const user = req.user.id;
-
-        const existingService = await Service.findById(service);
-        if (!existingService) {
-            return res.status(404).json({ message: "Service not found" });
-        }
-
-        const booking = new Booking({ user, service, date, timeSlot });
-        await booking.save();
-
-        // ✅ Proper population after save
-        const populatedBooking = await Booking.findById(booking._id)
-            .populate('user', 'name email')
-            .populate('service', 'name description');
-
-        res.status(201).json(populatedBooking);
+      const { service, date, timeSlot } = req.body;
+      const user = req.user.id;
+  
+      const existingService = await Service.findById(service);
+      if (!existingService) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+  
+      // ❗Check for time conflict
+      const existingBooking = await Booking.findOne({date, timeSlot });
+      if (existingBooking) {
+        return res.status(409).json({ message: "Selected time slot is already booked" });
+      }
+  
+      const booking = new Booking({ user, service, date, timeSlot });
+      await booking.save();
+  
+      const populatedBooking = await Booking.findById(booking._id)
+        .populate('user', 'name email')
+        .populate('service', 'name description');
+  
+      res.status(201).json(populatedBooking);
     } catch (error) {
-        res.status(500).json({ message: "Error creating booking", error: error.message });
+      res.status(500).json({ message: "Error creating booking", error: error.message });
     }
-};
-
+  };
+  
 
 
 
