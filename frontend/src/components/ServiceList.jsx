@@ -37,9 +37,15 @@ const ServiceList = ({ limit = 5 }) => {
             <p className="text-sm text-gray-600 mb-2">{service.description}</p>
             <p className="text-pink-600 font-bold mb-1">₹{service.price}</p>
             <p className="text-xs text-gray-500 mb-4">Duration: {service.duration}</p>
-            <button className="bg-pink-500 text-white py-2 px-4 rounded-full hover:bg-pink-600 transition">
-              Book Now
-            </button>
+            <Link to="/booking">
+            <button
+  onClick={() => localStorage.setItem("selectedServiceId", service._id)}
+  className="bg-pink-500 text-white py-2 px-4 rounded-full hover:bg-pink-600 transition"
+>
+  Book Now
+</button>
+
+            </Link>
           </div>
         ))}
       </div>
