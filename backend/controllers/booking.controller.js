@@ -91,10 +91,10 @@ exports.getBookingsByUser = async (req, res) => {
             return res.status(404).json({ message: "No bookings found for this user" });
         }
 
-        // ✅ Remove password before sending the response
+         
         const sanitizedBookings = bookings.map(booking => {
             const user = { ...booking.user._doc };
-            delete user.password; // Remove password from response
+            delete user.password;  
             return { ...booking._doc, user };
         });
 
