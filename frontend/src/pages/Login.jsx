@@ -17,6 +17,10 @@ const Login = () => {
     try {
       const res = await api.post("/users/login", form);
       localStorage.setItem("token", res.data.token);
+      const userId = res.data.user._id;
+      localStorage.setItem("userId", userId);
+      // console.log(userId);
+      
       toast.success("Login successful!",{ autoClose: 2000 });
       navigate("/profile");
     } catch (err) {

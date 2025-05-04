@@ -9,14 +9,16 @@ const ServiceList = ({ limit = 5 }) => {
       try {
         const res = await api.get('/services');
         setServices(res.data);
+        
+
       } catch (error) {
         console.error('Error fetching services:', error);
       }
     };
-
+    
     fetchServices();
   }, []);
-
+ 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Popular Services</h2>
@@ -39,7 +41,10 @@ const ServiceList = ({ limit = 5 }) => {
             <p className="text-xs text-gray-500 mb-4">Duration: {service.duration}</p>
             <Link to="/booking">
             <button
-  onClick={() => localStorage.setItem("selectedServiceId", service._id)}
+   onClick={() => {
+    localStorage.setItem("selectedServiceId", service._id);
+    localStorage.setItem("selectedServicePrice", service.price);
+  }}
   className="bg-pink-500 text-white py-2 px-4 rounded-full hover:bg-pink-600 transition"
 >
   Book Now

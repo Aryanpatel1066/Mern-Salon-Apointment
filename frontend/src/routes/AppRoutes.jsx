@@ -9,6 +9,8 @@ import Register from '../pages/Register';
 import AdminDashboard from '../pages/AdminDashboard';
 import ServicesPage from '../pages/ServicePage';
  import BookingForm from '../components/BookingForm';
+ import Success from "../pages/Success";
+ import MyBookings from '../pages/MyBookings';
 const AppRoutes = () => {
   return (
          <Routes>
@@ -20,6 +22,8 @@ const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/services" element={<ServicesPage/>}/>
           <Route path="/booking" element={<BookingForm/>}/>
+          <Route path="/success" element={<Success/>}/>
+          <Route path='/my-bookings' element={<MyBookings/>} />
         </Routes>
    );
 };

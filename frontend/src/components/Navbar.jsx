@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Bell, User } from "lucide-react";
+import { Link, useNavigate} from "react-router-dom";
+import { Bell, User,CalendarIcon} from "lucide-react";
  import { jwtDecode } from "jwt-decode";
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -33,6 +33,10 @@ const Navbar = () => {
           <Bell className="w-6 h-6 text-gray-700" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">3</span>
         </button>
+        <Link to="/my-bookings" className="text-sm text-gray-700 hover:text-pink-500 flex items-center gap-1">
+  <CalendarIcon className="w-5 h-5" />
+   
+</Link>
 
         {!isLoggedIn ? (
           <Link to="/login" className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-md transition-all">

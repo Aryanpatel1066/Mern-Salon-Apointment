@@ -6,13 +6,14 @@ import api from "../api/api";
 import Navbar from "../components/Navbar";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { useNavigate } from "react-router-dom";
 const BookingForm = () => {
+  const navigate = useNavigate();
   const [date, setDate] = useState(null);
   const [timeSlot, setTimeSlot] = useState("");
   const [serviceId, setServiceId] = useState(null);
   const [bookedSlots, setBookedSlots] = useState([]);
-
+const [servicePrice,setServicePrice]=useState(null);
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -24,8 +25,12 @@ const BookingForm = () => {
 
   useEffect(() => {
     const storedServiceId = localStorage.getItem("selectedServiceId");
-    if (storedServiceId) {
+    const storedServicePrice = localStorage.getItem("selectedServicePrice")
+  
+    if (storedServiceId  && storedServicePrice) {
       setServiceId(storedServiceId);
+      setServicePrice(storedServicePrice);
+
       setTimeSlot("");
     } else {
       toast.error("❌ No service selected. Please go back and choose one.");
@@ -34,7 +39,7 @@ const BookingForm = () => {
 
   useEffect(() => {
     fetchBookedSlots();
-  }, [date]);  // Fetch booked slots whenever the date changes
+  }, [date]);  
 
   const fetchBookedSlots = async () => {
     if (!date) return;
@@ -64,10 +69,10 @@ const BookingForm = () => {
       });
 
       toast.success("✅ Booking confirmed!");
-      setTimeSlot(""); // Reset time slot after booking
+      setTimeSlot("");  
+      navigate('/success')
 
-      // 🔄 Refresh slots immediately after booking
-      fetchBookedSlots();
+       fetchBookedSlots();
     } catch (err) {
       toast.error(err?.response?.data?.message || "❌ Booking failed.");
     }
@@ -135,7 +140,7 @@ const BookingForm = () => {
 
         {/* Payment */}
         <div className="p-3 border rounded bg-gray-50">
-          <p className="text-sm text-gray-600">💳 Pay ₹149 after services</p>
+          <p className="text-sm text-gray-600">💳 Pay ₹{servicePrice} after services</p>
         </div>
 
         {/* Submit Button */}
