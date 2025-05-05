@@ -20,9 +20,19 @@ const Login = () => {
       const userId = res.data.user._id;
       localStorage.setItem("userId", userId);
       // console.log(userId);
-      
+      console.log(res.data)
       toast.success("Login successful!",{ autoClose: 2000 });
-      navigate("/profile");
+      setTimeout(() => {
+        if (res.data.user.role === "admin") {
+           
+            navigate("/admin");
+        } else {
+            
+            navigate("/profile");
+        }
+    }, 500);  
+    
+      // navigate("/profile");
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed",{ autoClose: 2000 });
     }

@@ -108,23 +108,23 @@ exports.getBookingsByUser = async (req, res) => {
 
 
 // Update a booking (User can update only their own, Admin can update any)
-exports.updateBooking = async (req, res) => {
-    try {
-        const booking = await Booking.findById(req.params.id);
-        if (!booking) return res.status(404).json({ message: "Booking not found" });
+// exports.updateBooking = async (req, res) => {
+//     try {
+//         const booking = await Booking.findById(req.params.id);
+//         if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-        // User can update only their own booking
-        if (req.user.role !== "admin" && booking.user.toString() !== req.user.id) {
-            return res.status(403).json({ message: "Unauthorized" });
-        }
+//         // User can update only their own booking
+//         if (req.user.role !== "admin" && booking.user.toString() !== req.user.id) {
+//             return res.status(403).json({ message: "Unauthorized" });
+//         }
 
-        Object.assign(booking, req.body);
-        await booking.save();
-        res.status(200).json(booking);
-    } catch (error) {
-        res.status(500).json({ message: "Error updating booking", error });
-    }
-};
+//         Object.assign(booking, req.body);
+//         await booking.save();
+//         res.status(200).json(booking);
+//     } catch (error) {
+//         res.status(500).json({ message: "Error updating booking", error });
+//     }
+// };
 
 // Update booking status (Admin only)
 exports.updateBookingStatus = async (req, res) => {
