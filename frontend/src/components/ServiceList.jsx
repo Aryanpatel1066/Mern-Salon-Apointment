@@ -38,7 +38,7 @@ const ServiceList = ({ limit = 5 }) => {
             </div>
             <p className="text-sm text-gray-600 mb-2">{service.description}</p>
             <p className="text-pink-600 font-bold mb-1">₹{service.price}</p>
-            <p className="text-xs text-gray-500 mb-4">Duration: {service.duration}</p>
+            <p className="text-xs text-gray-500 mb-4">Duration: {service.duration} mins</p>
             <Link to="/booking">
             <button
    onClick={() => {
