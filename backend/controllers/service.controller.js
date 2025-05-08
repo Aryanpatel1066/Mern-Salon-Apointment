@@ -1,6 +1,6 @@
 const Service = require("../models/Service.model");
 
-// ✅ Create a new service
+// ✅ Create a new service by admin
 const createService = async (req, res) => {
     try {
         console.log("🟡 Received Body:", req.body); // ✅ Debugging line
