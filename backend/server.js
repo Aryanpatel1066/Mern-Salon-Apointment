@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());  
 const corsOptions = {
     origin: "http://localhost:5173" ,  
-    methods: ["GET", "POST", "PUT", "DELETE"],   
+    methods: ["GET", "POST", "PUT", "DELETE","PATCH"],   
     allowedHeaders: ["Content-Type", "Authorization"],  
     credentials: true, // Required for cookies/auth headers
   //origin :http://localhost:5173

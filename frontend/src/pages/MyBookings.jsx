@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const userId = localStorage.getItem("userId"); // ✅ Move this outside
 
   const loadBooking = async () => {
     try {
@@ -23,9 +24,18 @@ function MyBookings() {
     }
   };
 
+  // useEffect(() => {
+  //   loadBooking();
+  // }, []);
   useEffect(() => {
-    loadBooking();
-  }, []);
+    loadBooking(); // initial load
+
+    const interval = setInterval(() => {
+      loadBooking(); // auto-refresh every 2s
+    }, 2000);
+
+    return () => clearInterval(interval); // cleanup on unmount
+  }, [userId]);
 
   const getStatusStyles = (status) => {
     switch (status) {
