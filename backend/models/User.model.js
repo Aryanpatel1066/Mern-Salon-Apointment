@@ -6,7 +6,9 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     phone: { type: String },
     role: { type: String, enum: ["customer", "admin"], default: "customer" },
-    bookings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Booking" }]
+    bookings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Booking" }],
+    otp: { type: String },
+    otpExpires: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

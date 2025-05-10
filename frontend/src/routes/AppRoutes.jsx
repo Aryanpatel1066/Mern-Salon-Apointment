@@ -15,6 +15,9 @@ import AdminServiceManagement from "../admin/AdminServiceManagement";
 import AdminUserManagement from "../admin/AdminUserManagement";
 import AdminBookingManagement from "../admin/AdminBookingManagement";
 import AdminSidebar from '../admin/AdminSidebar';
+import ForgotPassword from '../pages/ForgotPassword';
+import VerifyOtp from "../pages/VerifyOtp"
+import ResetPassword from '../pages/ResetPassword';
 const AppRoutes = () => {
   return (
     <Routes>
@@ -35,7 +38,11 @@ const AppRoutes = () => {
         <Route path="services" element={<AdminServiceManagement />} />
         <Route path="users" element={<AdminUserManagement />} />
         <Route path="bookings" element={<AdminBookingManagement />} />
-      </Route>
+ </Route>
+         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+     
     </Routes>
   );
 };

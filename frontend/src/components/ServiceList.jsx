@@ -10,7 +10,9 @@ const ServiceList = ({ limit = 5 }) => {
     const fetchServices = async () => {
       try {
         const res = await api.get('/services');
+        
         setServices(res.data);
+        console.log(res.data)
       } catch (error) {
         console.error('Error fetching services:', error);
       }
@@ -47,17 +49,20 @@ const ServiceList = ({ limit = 5 }) => {
             <p className="text-sm text-gray-600 mb-2">{service.description}</p>
             <p className="text-pink-600 font-bold mb-1">₹{service.price}</p>
             <p className="text-xs text-gray-500 mb-4">Duration: {service.duration} mins</p>
-            <Link to="/booking">
-              <button
-                onClick={() => {
-                  localStorage.setItem('selectedServiceId', service._id);
-                  localStorage.setItem('selectedServicePrice', service.price);
-                }}
-                className="bg-pink-500 text-white py-2 px-4 rounded-full hover:bg-pink-600 transition"
-              >
-                Book Now
-              </button>
-            </Link>
+            {service.available && (
+  <Link to="/booking">
+    <button
+      onClick={() => {
+        localStorage.setItem('selectedServiceId', service._id);
+        localStorage.setItem('selectedServicePrice', service.price);
+      }}
+      className="bg-pink-500 text-white py-2 px-4 rounded-full hover:bg-pink-600 transition"
+    >
+      Book Now
+    </button>
+  </Link>
+)}
+
           </motion.div>
         ))}
       </div>

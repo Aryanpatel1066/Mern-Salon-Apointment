@@ -69,6 +69,11 @@ const Login = () => {
         <NavLink to="/register" className="block text-center text-pink-600 mt-2 hover:underline">
           Don’t have an account? Register
         </NavLink>
+         <div className="mt-4 text-center">
+          <NavLink to="/forgot-password" className="text-blue-500 hover:text-blue-700">
+            Forgot password?
+          </NavLink>
+        </div>
       </div>
     </>
   );
