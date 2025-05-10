@@ -110,4 +110,16 @@ const updateUser = async (req, res) => {
         res.status(500).json({ message: "Server Error", error: err.message });
     }
 };
-module.exports = { registerUser, loginUser, getUserProfile ,getAllUser,deleteUser,updateUser};
+//admin count the total user
+const countUser = async(req,res)=>{
+    try{
+const userCount = await User.countDocuments();
+res.json({
+   count: userCount
+})
+    }
+    catch(err){
+        res.status(500).json({message:"failed to count user"})
+    }
+}
+module.exports = { registerUser, loginUser, getUserProfile ,getAllUser,deleteUser,updateUser,countUser};

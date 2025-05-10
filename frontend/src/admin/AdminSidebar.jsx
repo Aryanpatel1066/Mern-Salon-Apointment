@@ -1,23 +1,56 @@
- // AdminSidebar.jsx
 import { Link, Outlet } from "react-router-dom";
+import { Home, Scissors, Users, CalendarCheck } from "lucide-react";
 
 function AdminSidebar() {
-    return (
-        <div style={{ display: "flex", minHeight: "100vh" }}>
-            <nav style={{ width: "200px", background: "#f0f0f0", padding: "1rem" }}>
-                <h2>Admin Panel</h2>
-                <ul style={{ listStyle: "none", padding: 0 }}>
-                    <li><Link to="/admin/dashboard">Dashboard</Link></li>
-                    <li><Link to="/admin/services">Service Management</Link></li>
-                    <li><Link to="/admin/users">User Management</Link></li>
-                    <li><Link to="/admin/bookings">Booking Management</Link></li>
-                </ul>
-            </nav>
-            <main style={{ flex: 1, padding: "1rem"}}>
-                <Outlet />
-            </main>
-        </div>
-    );
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      <aside className="w-64 bg-white shadow-md p-5 border-r border-gray-200">
+        <h2 className="text-2xl font-bold text-pink-600 mb-6">Admin Panel</h2>
+        <ul className="space-y-4 text-gray-700">
+          <li>
+            <Link
+              to="/admin/dashboard"
+              className="flex items-center space-x-2 hover:text-pink-600 transition"
+            >
+              <Home size={18} />
+              <span>Dashboard</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/admin/services"
+              className="flex items-center space-x-2 hover:text-pink-600 transition"
+            >
+              <Scissors size={18} />
+              <span>Service Management</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/admin/users"
+              className="flex items-center space-x-2 hover:text-pink-600 transition"
+            >
+              <Users size={18} />
+              <span>User Management</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/admin/bookings"
+              className="flex items-center space-x-2 hover:text-pink-600 transition"
+            >
+              <CalendarCheck size={18} />
+              <span>Booking Management</span>
+            </Link>
+          </li>
+        </ul>
+      </aside>
+
+      <main className="flex-1 p-6">
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 
 export default AdminSidebar;

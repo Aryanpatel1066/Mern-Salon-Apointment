@@ -68,9 +68,23 @@ const deleteService = async (req, res) => {
     }
 };
 
+const serviceCount = async(req,res)=>{
+    try{
+   const serviceCounting = await Service.countDocuments();
+   res.json({
+    count:serviceCounting
+   })
+    }
+    catch(err){
+        err.status(500).json({
+            message:"failed to fetch service count"
+        })
+    }
+}
 module.exports = {
     createService,
     getAllServices,
      updateService,
-    deleteService
+    deleteService,
+    serviceCount,
 };

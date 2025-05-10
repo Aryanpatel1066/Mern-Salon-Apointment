@@ -126,6 +126,8 @@ exports.getBookingsByUser = async (req, res) => {
 //     }
 // };
 
+
+
 // Update booking status (Admin only)
 exports.updateBookingStatus = async (req, res) => {
     try {
@@ -161,3 +163,17 @@ exports.deleteBooking = async (req, res) => {
         res.status(500).json({ message: "Error deleting booking", error });
     }
 };
+
+exports.countBooking = async(req,res)=>{
+    try{
+     const bookingCount = await Booking.countDocuments();
+     res.json({
+        count:bookingCount
+     })
+    }
+    catch(err){
+        res.status(500).json({
+            message:"faild to count booking"
+        })
+    }
+}

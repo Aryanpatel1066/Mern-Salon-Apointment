@@ -35,4 +35,5 @@ router.get("/booked-slots", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch slots", error: error.message });
   }
 });
+router.get("/admin/bookingCount",authMiddleware,bookingController.countBooking)
 module.exports = router;
