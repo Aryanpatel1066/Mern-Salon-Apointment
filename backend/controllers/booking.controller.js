@@ -1,10 +1,10 @@
 const Booking = require("../models/Booking.model");
 const User = require("../models/User.model");
 const Service = require("../models/Service.model");
+const {transporter} = require("../utils/sendEmail");
+   
+  const STATIC_LOCATION = "382860 city:vijapur house number 123"; // Or use process.env.SALON_LOCATION
 
-//done Create a new booking (User only)
-  
-  
 // exports.createBooking = async (req, res) => {
 //     try {
 //         const { service, date, timeSlot } = req.body;
@@ -129,21 +129,79 @@ exports.getBookingsByUser = async (req, res) => {
 
 
 // Update booking status (Admin only)
+// exports.updateBookingStatus = async (req, res) => {
+//     try {
+//         if (req.user.role !== "admin") {
+//             return res.status(403).json({ message: "Only admins can update booking status" });
+//         }
+
+//         const booking = await Booking.findById(req.params.id);
+//         if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+//         booking.status = req.body.status;
+//         await booking.save();
+//         res.status(200).json({ message: "Booking status updated", booking });
+//     } catch (error) {
+//         res.status(500).json({ message: "Error updating booking status", error });
+//     }
+// };
+
+ 
 exports.updateBookingStatus = async (req, res) => {
-    try {
-        if (req.user.role !== "admin") {
-            return res.status(403).json({ message: "Only admins can update booking status" });
-        }
-
-        const booking = await Booking.findById(req.params.id);
-        if (!booking) return res.status(404).json({ message: "Booking not found" });
-
-        booking.status = req.body.status;
-        await booking.save();
-        res.status(200).json({ message: "Booking status updated", booking });
-    } catch (error) {
-        res.status(500).json({ message: "Error updating booking status", error });
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admins can update booking status" });
     }
+
+    const booking = await Booking.findById(req.params.id).populate("user").populate("service");  
+
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    booking.status = req.body.status;
+    await booking.save();
+
+    // Send email based on status
+    const { email, name } = booking.user;
+     const { name: serviceName } = booking.service;
+    const date = new Date(booking.date).toLocaleDateString();
+    const time = booking.timeSlot;
+
+
+    let subject, text;
+
+  if (booking.status === "confirmed") {
+      subject = "Your Booking is Confirmed!";
+      text = `Hi ${name || "User"},\n
+      \nYour booking for "${serviceName}" has been confirmed.\n
+      \n📅 Date: ${date}\n⏰ Time: ${time}
+      \n📍 Location: ${STATIC_LOCATION}\n
+      \n✅ Check your status in your profile
+      \n💫"Time is Money so please come on time , without someone else on your sloat"
+      \nThank you for booking with us!\n
+      \nSalonBlis App Team`;
+    } else if (booking.status === "cancelled") {
+      subject = "Your Booking Has Been Cancelled";
+      text = `Hi ${name || "User"},\n
+      \nYour booking for "${serviceName}" on 📅${date} at⏰ ${time} has been cancelled.\n
+      \nIf this was unexpected, please reach out to our support team.\n
+      \nSalonBlis App Team`;
+    }
+
+    if (subject && text) {
+      await transporter.sendMail({
+        from: `"Salon App Support" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject,
+        text,
+      });
+    }
+
+
+    res.status(200).json({ message: "Booking status updated and email sent", booking });
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({ message: "Error updating booking status", error });
+  }
 };
 
 // Delete a booking ADmin only

@@ -22,6 +22,7 @@ function AdminBookingManagement() {
   }, []);
 
   const handleStatusChange = async (id, status) => {
+    console.log(id,status)
     try {
       await api.patch(`/booking/${id}/status`, { status });
       fetchBookings();

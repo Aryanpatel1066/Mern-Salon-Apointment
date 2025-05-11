@@ -106,4 +106,5 @@ module.exports = {
   sendOTP,
   verifyOTP,
   resetPassword,
+  transporter,
 };
