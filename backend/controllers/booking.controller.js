@@ -2,8 +2,10 @@ const Booking = require("../models/Booking.model");
 const User = require("../models/User.model");
 const Service = require("../models/Service.model");
 const {transporter} = require("../utils/sendEmail");
-   
+   const Notification = require("../models/Notification.model");
+
   const STATIC_LOCATION = "382860 city:vijapur house number 123"; // Or use process.env.SALON_LOCATION
+let notificationMessage = "";
 
 // exports.createBooking = async (req, res) => {
 //     try {
@@ -170,6 +172,8 @@ exports.updateBookingStatus = async (req, res) => {
     let subject, text;
 
   if (booking.status === "confirmed") {
+      notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been confirmed.`;
+
       subject = "Your Booking is Confirmed!";
       text = `Hi ${name || "User"},\n
       \nYour booking for "${serviceName}" has been confirmed.\n
@@ -180,13 +184,23 @@ exports.updateBookingStatus = async (req, res) => {
       \nThank you for booking with us!\n
       \nSalonBlis App Team`;
     } else if (booking.status === "cancelled") {
+        notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.`;
+
       subject = "Your Booking Has Been Cancelled";
       text = `Hi ${name || "User"},\n
       \nYour booking for "${serviceName}" on 📅${date} at⏰ ${time} has been cancelled.\n
       \nIf this was unexpected, please reach out to our support team.\n
       \nSalonBlis App Team`;
     }
+// Save Notification
+if (notificationMessage) {
+  await Notification.create({
+    user: booking.user._id,
+    message: notificationMessage
+  });
+}
 
+//send mail
     if (subject && text) {
       await transporter.sendMail({
         from: `"Salon App Support" <${process.env.EMAIL_USER}>`,

@@ -18,6 +18,7 @@ import AdminSidebar from '../admin/AdminSidebar';
 import ForgotPassword from '../pages/ForgotPassword';
 import VerifyOtp from "../pages/VerifyOtp"
 import ResetPassword from '../pages/ResetPassword';
+import Notification from '../pages/Notification';
 const AppRoutes = () => {
   return (
     <Routes>
@@ -42,7 +43,7 @@ const AppRoutes = () => {
          <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-     
+     <Route path="/notification" element={<Notification/>}/>
     </Routes>
   );
 };
