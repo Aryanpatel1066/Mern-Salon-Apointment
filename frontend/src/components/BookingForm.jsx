@@ -16,7 +16,7 @@ const BookingForm = () => {
 const [servicePrice,setServicePrice]=useState(null);
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-
+const token = localStorage.getItem("token")
   const timeSlots = [
     "7AM to 8AM", "8AM to 9AM", "9AM to 10AM", "10AM to 11AM",
     "11AM to 12PM", "12PM to 1PM", "1PM to 2PM", "2PM to 3PM",
@@ -38,6 +38,10 @@ const [servicePrice,setServicePrice]=useState(null);
   }, []);
 
   useEffect(() => {
+     if (!token) {
+      navigate("/login");
+      return;
+    }
     fetchBookedSlots();
   }, [date]);  
 

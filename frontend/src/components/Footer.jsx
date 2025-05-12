@@ -15,7 +15,7 @@ const Footer = () => {
         <div className="text-sm space-y-2 text-center md:text-right">
           <div className="flex items-center justify-center md:justify-end gap-2">
             <MapPin className="w-4 h-4 text-pink-500" />
-            <p>123 Elegance Lane, City Center</p>
+            <p>123 vijapur, City Center</p>
           </div>
           <div className="flex items-center justify-center md:justify-end gap-2">
             <Phone className="w-4 h-4 text-pink-500" />

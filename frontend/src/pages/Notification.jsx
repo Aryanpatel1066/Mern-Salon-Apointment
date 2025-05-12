@@ -2,12 +2,14 @@
 import api from "../api/api";
 import axios from "axios";
 import Navbar from "../components/Navbar";
-
+import { useNavigate } from "react-router-dom";
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const navigate = useNavigate();
+    const token = localStorage.getItem("token");
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -42,6 +44,10 @@ const Notification = () => {
   };
 
   useEffect(() => {
+      if (!token) {
+      navigate("/login");
+      return;
+    }
     fetchNotifications();
   }, []);
 

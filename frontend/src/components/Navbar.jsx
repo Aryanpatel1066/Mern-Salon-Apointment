@@ -2,7 +2,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Bell, User, CalendarIcon } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
-import api from "../api/api"; // Ensure you use the same instance as in Notification.jsx
+import api from "../api/api";  
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

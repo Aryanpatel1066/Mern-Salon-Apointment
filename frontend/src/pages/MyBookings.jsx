@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
-
+import { useNavigate } from "react-router-dom";
 function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = localStorage.getItem("userId"); // ✅ Move this outside
+  const userId = localStorage.getItem("userId"); 
+  const token = localStorage.getItem("token")
+  const navigate=useNavigate();
 
   const loadBooking = async () => {
     try {
@@ -28,10 +30,15 @@ function MyBookings() {
   //   loadBooking();
   // }, []);
   useEffect(() => {
-    loadBooking(); // initial load
+     if (!token) {
+      navigate("/login");
+      return;
+    }
+    loadBooking();  
 
     const interval = setInterval(() => {
-      loadBooking(); // auto-refresh every 2s
+      loadBooking();  
+
     }, 2000);
 
     return () => clearInterval(interval); // cleanup on unmount
