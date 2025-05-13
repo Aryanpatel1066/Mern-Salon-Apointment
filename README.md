@@ -45,7 +45,7 @@ git clone https://github.com/your-username/salon-bliss.git
 cd salon-bliss
 cd frontend
 npm install
-npm run dev
+npm run dev ```
 
 ## 🤝 Contributing
 Pull requests are welcome! For major changes, open an issue first to discuss what you’d like to change.
