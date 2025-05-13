@@ -47,6 +47,10 @@ cd frontend
 npm install
 npm run dev
 
+## 🤝 Contributing
+Pull requests are welcome! For major changes, open an issue first to discuss what you’d like to change.
+
+
 ###  🎨 ui design
 ![Image](https://github.com/user-attachments/assets/32467836-429f-444a-b44d-5f1df5968df8)
 ![Image](https://github.com/user-attachments/assets/9d469510-6b11-4bb4-915b-bf1b2a75d57d)
