@@ -8,7 +8,7 @@ connectDB(); // Connect to MongoDB
 const app = express();
 app.use(express.json());  
 const corsOptions = {
-    origin: "http://localhost:5173" ,  
+    origin: "https://mern-salon-apointment.vercel.app/" ,  
     methods: ["GET", "POST", "PUT", "DELETE","PATCH"],   
     allowedHeaders: ["Content-Type", "Authorization"],  
     credentials: true, // Required for cookies/auth headers
