@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://mern-salon-apointment.onrender.com//api', // Change to your actual backend URL
+  baseURL: 'https://mern-salon-apointment.onrender.com/api', // Change to your actual backend URL
   withCredentials: true,                // If you're using cookies/session
   headers: {
     'Content-Type': 'application/json',
