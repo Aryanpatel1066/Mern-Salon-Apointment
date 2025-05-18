@@ -178,15 +178,14 @@ const timeZone = "Asia/Kolkata";
 // }).format(dateObj);
 const bookingDate = new Date(booking.date);
 
-const formattedDate = new Intl.DateTimeFormat('en-IN', {
+const date = new Intl.DateTimeFormat('en-IN', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
   timeZone,
 }).format(bookingDate);
 
-console.log(formattedDate);  // e.g., "May 22, 2025"
-
+ 
 const time = booking.timeSlot;
 
 
