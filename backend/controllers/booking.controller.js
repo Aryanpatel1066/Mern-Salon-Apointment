@@ -169,13 +169,23 @@ exports.updateBookingStatus = async (req, res) => {
     // const time = booking.timeSlot;
 const timeZone = "Asia/Kolkata";  
 
-const dateObj = new Date(booking.date);
-const date = new Intl.DateTimeFormat("en-IN", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
+// const dateObj = new Date(booking.date);
+// const date = new Intl.DateTimeFormat("en-IN", {
+//   year: "numeric",
+//   month: "long",
+//   day: "numeric",
+//   timeZone,
+// }).format(dateObj);
+const bookingDate = new Date(booking.date);
+
+const formattedDate = new Intl.DateTimeFormat('en-IN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
   timeZone,
-}).format(dateObj);
+}).format(bookingDate);
+
+console.log(formattedDate);  // e.g., "May 22, 2025"
 
 const time = booking.timeSlot;
 
