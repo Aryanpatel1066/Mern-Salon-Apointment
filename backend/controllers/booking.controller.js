@@ -165,8 +165,19 @@ exports.updateBookingStatus = async (req, res) => {
     // Send email based on status
     const { email, name } = booking.user;
      const { name: serviceName } = booking.service;
-    const date = new Date(booking.date).toLocaleDateString();
-    const time = booking.timeSlot;
+    // const date = new Date(booking.date).toLocaleDateString();
+    // const time = booking.timeSlot;
+const timeZone = "Asia/Kolkata";  
+
+const dateObj = new Date(booking.date);
+const date = new Intl.DateTimeFormat("en-IN", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone,
+}).format(dateObj);
+
+const time = booking.timeSlot;
 
 
     let subject, text;
