@@ -22,9 +22,10 @@ const Notification = () => {
       setNotifications(res.data);
       const unread = res.data.filter(n => !n.read).length;
       setUnreadCount(unread);
-      setLoading(false);
-    } catch (err) {
+     } catch (err) {
       setError("Failed to load notifications");
+     }
+    finally {
       setLoading(false);
     }
   };
@@ -51,9 +52,15 @@ const Notification = () => {
     fetchNotifications();
   }, []);
 
-  if (loading) return <p>Loading notifications...</p>;
-  if (error) return <p>{error}</p>;
+   if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
+  if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
   return (
     <div>
         <Navbar/>

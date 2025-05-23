@@ -7,6 +7,8 @@ import { toast } from "react-toastify";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,7 +22,7 @@ const Profile = () => {
         toast.error("Session expired. Please log in again.", { autoClose: 2000 });
         localStorage.removeItem("token");
         navigate("/login");
-      });
+      }).finally(() => setLoading(false));
   }, [navigate]);
 
   const handleLogout = () => {
@@ -28,8 +30,14 @@ const Profile = () => {
     toast.success("You have logged out successfully!", { autoClose: 2000 });
     navigate("/login");
   };
-
-  if (!user) return <p className="text-center mt-10">Loading...</p>;
+if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+    if (!user) return null;
 
   return (
     <>
