@@ -5,6 +5,7 @@ import api from '../api/api';
 
 const ServiceList = ({ limit = 5 }) => {
   const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);  
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -16,11 +17,20 @@ const ServiceList = ({ limit = 5 }) => {
       } catch (error) {
         console.error('Error fetching services:', error);
       }
+      finally {
+        setLoading(false); 
+      }
     };
 
     fetchServices();
   }, []);
-
+ if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <h2 className="text-4xl font-bold mb-8 text-center text-gray-800">Popular Services</h2>
