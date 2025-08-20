@@ -45,6 +45,7 @@ if (loading) {
       <div className="max-w-md mx-auto mt-10 p-6 shadow-lg rounded-lg bg-white">
         <h1 className="text-3xl font-bold text-pink-600 mb-4">Welcome, {user.name}</h1>
         <p className="mb-2"><strong>Email:</strong> {user.email}</p>
+<p className="mb-2"><strong>Mobile:</strong> {user.phone}</p>
 
         <button
           onClick={handleLogout}

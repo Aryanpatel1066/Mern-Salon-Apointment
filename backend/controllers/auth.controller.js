@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password,phone } = req.body;
 
         // Check if user exists
         // let user = await User.findOne({ email });
@@ -18,7 +18,7 @@ const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create user
-       let user = new User({ name, email, password: hashedPassword });
+       let user = new User({ name, email, password: hashedPassword ,phone});
         await user.save();
 
         // Generate JWT token
@@ -107,10 +107,10 @@ const deleteUser = async (req, res) => {
 //admin side update data
 const updateUser = async (req, res) => {
     try {
-        const { name, email } = req.body;
+        const { name, email,phone } = req.body;
         const updatedUser = await User.findByIdAndUpdate(
             req.params.id,
-            { name, email },
+            { name, email,phone },
             { new: true, runValidators: true }
         );
 

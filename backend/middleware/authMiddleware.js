@@ -40,7 +40,13 @@ const verifySignupBody = async (req, res, next) => {
         if (!req.body.password) {
             return res.status(400).send({ message: "User password is required" });
         }
+if (!req.body.phone) {
+      return res.status(400).send({ message: "Phone number is required" });
+    }
 
+     if (!/^[0-9]{10}$/.test(req.body.phone)) {
+      return res.status(400).json({ message: "Invalid phone number format" });
+    }
         // Check if email already exists
         let existingUser = await User.findOne({ email: req.body.email });
         if (existingUser) {

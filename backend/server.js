@@ -2,18 +2,20 @@ const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const cors = require("cors");
-const initAdmin = require('./utils/initAdmin') 
+const initAdmin = require('./utils/initAdmin') ;
+const mongoose = require('mongoose');
 dotenv.config();  
 connectDB(); // Connect to MongoDB
 const app = express();
 app.use(express.json());  
 const corsOptions = {
-    origin: "https://mern-salon-apointment.vercel.app" ,  
+    // origin: ["http://localhost:5173", "http://localhost:5173/"],  
+
+     origin: "https://mern-salon-apointment.vercel.app" ,  
     methods: ["GET", "POST", "PUT", "DELETE","PATCH"],   
     allowedHeaders: ["Content-Type", "Authorization"],  
     credentials: true, // Required for cookies/auth headers
-  //origin :http://localhost:5173
-  };
+   };
   
   // Apply CORS middleware globally
   app.use(cors(corsOptions));
@@ -31,6 +33,7 @@ app.use("/api/booking",require('./routes/booking.route'))
 app.use("/api/email",require("./routes/email.route"))
 
 app.use("/api/notifications", require("./routes/notification.route"));
+app.use("/api/closed-days", require("./routes/closeDays.route"));
 
 // Start Server on Port from .env
 const PORT = process.env.PORT || 5000;

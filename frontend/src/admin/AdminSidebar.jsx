@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-import { Home, Scissors, Users, CalendarCheck } from "lucide-react";
+import { Home, Scissors, Users, CalendarCheck,CalendarX } from "lucide-react";
 
 function AdminSidebar() {
   return (
@@ -41,6 +41,15 @@ function AdminSidebar() {
             >
               <CalendarCheck size={18} />
               <span>Booking Management</span>
+            </Link>         
+          </li>
+           <li>
+            <Link
+              to="/admin/closed-days"
+              className="flex items-center space-x-2 hover:text-pink-600 transition"
+            >
+              <CalendarX size={18} />
+              <span>Closed Days</span>
             </Link>
           </li>
         </ul>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+ import React, { useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
@@ -6,7 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 
 const Register = () => {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -35,12 +35,24 @@ const Register = () => {
             placeholder="Name"
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded"
+            required
           />
           <input
             name="email"
+            type="email"
             placeholder="Email"
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded"
+            required
+          />
+          <input
+            name="phone"
+            type="tel"
+            placeholder="Mobile Number"
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded"
+            pattern="[0-9]{10}"
+            required
           />
           <div className="relative">
             <input
@@ -49,6 +61,7 @@ const Register = () => {
               placeholder="Password"
               onChange={handleChange}
               className="w-full border px-3 py-2 rounded pr-10"
+              required
             />
             <div
               onClick={() => setShowPassword(!showPassword)}
@@ -58,7 +71,9 @@ const Register = () => {
             </div>
           </div>
           
-          <button type="submit" className="bg-pink-600 text-white px-4 py-2 rounded w-full">Register</button>
+          <button type="submit" className="bg-pink-600 text-white px-4 py-2 rounded w-full">
+            Register
+          </button>
         </form>
 
         <NavLink to="/login" className="block text-center text-pink-600 mt-2 hover:underline">

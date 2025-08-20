@@ -10,7 +10,7 @@ function AdminUserManagement() {
   // Modal state
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState({ name: "", email: "",phone:"" });
 
   useEffect(() => {
     fetchUsers();
@@ -39,7 +39,7 @@ function AdminUserManagement() {
 
   const openEditModal = (user) => {
     setSelectedUser(user);
-    setFormData({ name: user.name, email: user.email });
+    setFormData({ name: user.name, email: user.email,phone: user.phone });
     setIsOpen(true);
   };
 
@@ -67,6 +67,8 @@ function AdminUserManagement() {
             <tr>
               <th className="text-left py-2 px-4 border-b">Name</th>
               <th className="text-left py-2 px-4 border-b">Email</th>
+             <th className="text-left py-2 px-4 border-b">Mobile</th>
+
               <th className="text-left py-2 px-4 border-b">Actions</th>
             </tr>
           </thead>
@@ -75,6 +77,8 @@ function AdminUserManagement() {
               <tr key={user._id} className="hover:bg-gray-50">
                 <td className="py-2 px-4 border-b">{user.name}</td>
                 <td className="py-2 px-4 border-b">{user.email}</td>
+                <td className="py-2 px-4 border-b">{user.phone}</td>
+
                 <td className="py-2 px-4 border-b space-x-2">
                   <button
                     onClick={() => openEditModal(user)}
@@ -117,6 +121,19 @@ function AdminUserManagement() {
                   className="mt-1 w-full border px-3 py-2 rounded"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Mobile
+                </label>
+                <input
+                  type="text"
+                  className="mt-1 w-full border px-3 py-2 rounded"
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                 />
               </div>
               <div className="flex justify-end space-x-2 mt-4">

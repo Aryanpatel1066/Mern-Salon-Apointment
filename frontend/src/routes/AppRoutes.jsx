@@ -19,6 +19,7 @@ import ForgotPassword from '../pages/ForgotPassword';
 import VerifyOtp from "../pages/VerifyOtp"
 import ResetPassword from '../pages/ResetPassword';
 import Notification from '../pages/Notification';
+import AdminClosedDays from "../admin/AdminCloseDays"
 const AppRoutes = () => {
   return (
     <Routes>
@@ -39,6 +40,7 @@ const AppRoutes = () => {
         <Route path="services" element={<AdminServiceManagement />} />
         <Route path="users" element={<AdminUserManagement />} />
         <Route path="bookings" element={<AdminBookingManagement />} />
+          <Route path="closed-days" element={<AdminClosedDays />} />    
  </Route>
          <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
