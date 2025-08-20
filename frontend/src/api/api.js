@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
    baseURL: 'https://mern-salon-apointment.onrender.com/api',
-  // baseURL:'http://localhost:1066/api',
+//   baseURL:'http://localhost:1066/api',
   withCredentials: true,                
   headers: {
     'Content-Type': 'application/json',
