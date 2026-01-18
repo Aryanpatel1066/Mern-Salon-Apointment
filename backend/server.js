@@ -5,8 +5,7 @@ const cors = require("cors");
 const initAdmin = require('./utils/initAdmin') ;
 const mongoose = require('mongoose');
 dotenv.config();  
-connectDB(); // Connect to MongoDB
-const app = express();
+ const app = express();
 app.use(express.json());  
 const corsOptions = {
   //   origin: ["http://localhost:5173", "http://localhost:5173/"],  
@@ -22,8 +21,7 @@ const corsOptions = {
   
 
  
-initAdmin()
-// Test Route
+ // Test Route
 app.get("/", (req, res) => {
     res.send("🚀 Salon Booking API is Running...");
 });
@@ -37,4 +35,16 @@ app.use("/api/closed-days", require("./routes/closeDays.route"));
 app.use("/api/booking",require("./routes/slotLock.route"));
 // Start Server on Port from .env
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+
+  /* ⏳ CONNECT DB AFTER SERVER IS LIVE */
+  connectDB()
+    .then(() => {
+      console.log("✅ MongoDB connected");
+      initAdmin(); // move here
+    })
+    .catch((err) => {
+      console.error("❌ MongoDB connection failed", err);
+    });
+});
