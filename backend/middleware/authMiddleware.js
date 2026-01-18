@@ -25,9 +25,6 @@ const authMiddleware = async (req, res, next) => {
         res.status(401).json({ message: "Invalid Token" });
     }
 };
-
-
-
 // Middleware to Validate Signup Request
 const verifySignupBody = async (req, res, next) => {
     try {
@@ -40,13 +37,13 @@ const verifySignupBody = async (req, res, next) => {
         if (!req.body.password) {
             return res.status(400).send({ message: "User password is required" });
         }
-if (!req.body.phone) {
-      return res.status(400).send({ message: "Phone number is required" });
-    }
+        if (!req.body.phone) {
+            return res.status(400).send({ message: "Phone number is required" });
+        }
 
-     if (!/^[0-9]{10}$/.test(req.body.phone)) {
-      return res.status(400).json({ message: "Invalid phone number format" });
-    }
+        if (!/^[0-9]{10}$/.test(req.body.phone)) {
+            return res.status(400).json({ message: "Invalid phone number format" });
+        }
         // Check if email already exists
         let existingUser = await User.findOne({ email: req.body.email });
         if (existingUser) {
@@ -57,9 +54,9 @@ if (!req.body.phone) {
     } catch (err) {
         res.status(500).send({ message: "Error while verifying signup body" });
     }
-     
+
 };
-const verifySignInBody = async (req,res,next) =>{
+const verifySignInBody = async (req, res, next) => {
     try {
         if (!req.body.email) {
             return res.status(400).send({ message: "User email is required" });
@@ -69,9 +66,9 @@ const verifySignInBody = async (req,res,next) =>{
         }
         next()
     }
-    catch(err){
+    catch (err) {
         res.status(500).send({
-            message:"internal error while checking signin body"
+            message: "internal error while checking signin body"
         })
     }
 }

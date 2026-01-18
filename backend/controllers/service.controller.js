@@ -27,9 +27,6 @@ const createService = async (req, res) => {
         res.status(500).json({ message: "Error creating service", error: error.message });
     }
 };
-
-
-
 // ✅ Get all services
 const getAllServices = async (req, res) => {
     try {
@@ -39,9 +36,6 @@ const getAllServices = async (req, res) => {
         res.status(500).json({ message: "Error fetching services", error: error.message });
     }
 };
-
- 
-
 // ✅ Update a service
 const updateService = async (req, res) => {
     try {
@@ -54,7 +48,6 @@ const updateService = async (req, res) => {
         res.status(500).json({ message: "Error updating service", error: error.message });
     }
 };
-
 // ✅ Delete a service
 const deleteService = async (req, res) => {
     try {
@@ -67,24 +60,24 @@ const deleteService = async (req, res) => {
         res.status(500).json({ message: "Error deleting service", error: error.message });
     }
 };
-
-const serviceCount = async(req,res)=>{
-    try{
-   const serviceCounting = await Service.countDocuments();
-   res.json({
-    count:serviceCounting
-   })
+//service count
+const serviceCount = async (req, res) => {
+    try {
+        const serviceCounting = await Service.countDocuments();
+        res.json({
+            count: serviceCounting
+        })
     }
-    catch(err){
+    catch (err) {
         err.status(500).json({
-            message:"failed to fetch service count"
+            message: "failed to fetch service count"
         })
     }
 }
 module.exports = {
     createService,
     getAllServices,
-     updateService,
+    updateService,
     deleteService,
     serviceCount,
 };

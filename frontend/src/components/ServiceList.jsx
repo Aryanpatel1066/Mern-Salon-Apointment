@@ -13,8 +13,7 @@ const ServiceList = ({ limit = 5 }) => {
         const res = await api.get('/services');
         
         setServices(res.data);
-        console.log(res.data)
-      } catch (error) {
+       } catch (error) {
         console.error('Error fetching services:', error);
       }
       finally {

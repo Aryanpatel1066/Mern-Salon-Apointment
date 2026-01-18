@@ -9,7 +9,7 @@ connectDB(); // Connect to MongoDB
 const app = express();
 app.use(express.json());  
 const corsOptions = {
-    // origin: ["http://localhost:5173", "http://localhost:5173/"],  
+  //   origin: ["http://localhost:5173", "http://localhost:5173/"],  
 
      origin: "https://mern-salon-apointment.vercel.app" ,  
     methods: ["GET", "POST", "PUT", "DELETE","PATCH"],   
@@ -34,7 +34,7 @@ app.use("/api/email",require("./routes/email.route"))
 
 app.use("/api/notifications", require("./routes/notification.route"));
 app.use("/api/closed-days", require("./routes/closeDays.route"));
-
+app.use("/api/booking",require("./routes/slotLock.route"));
 // Start Server on Port from .env
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

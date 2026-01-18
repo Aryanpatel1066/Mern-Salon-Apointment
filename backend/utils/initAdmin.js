@@ -7,7 +7,7 @@ const initAdmin = async () => {
         const adminUser = await User.findOne({ email: "aryanpatel1248@gmail.com" });
 
         if (adminUser) {
-            console.log("✅ Admin user already exists");
+            // console.log("✅ Admin user already exists");
             return;
         }
 
@@ -22,7 +22,7 @@ const initAdmin = async () => {
             password: hashedPassword, // Store hashed password
         });
 
-        console.log("🎉 Admin user created successfully:", newUser.email);
+        // console.log("🎉 Admin user created successfully:", newUser.email);
     } catch (err) {
         console.error("❌ Error during admin initialization:", err);
     }

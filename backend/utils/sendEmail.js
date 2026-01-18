@@ -47,8 +47,7 @@ const sendOTP = async (req, res) => {
 // Verify OTP
 const verifyOTP = async (req, res) => {
   const { otp } = req.body;
-console.log(otp)
-
+ 
   if (!otp) {
     return res.status(400).json({ message: "OTP is required" });
   }

@@ -20,7 +20,7 @@ const Login = () => {
       const userId = res.data.user._id;
       localStorage.setItem("userId", userId);
       // console.log(userId);
-      console.log(res.data)
+      // console.log(res.data)
       toast.success("Login successful!",{ autoClose: 2000 });
       setTimeout(() => {
         if (res.data.user.role === "admin") {
