@@ -2,7 +2,7 @@
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User.model");
-
+const sgMail = require("@sendgrid/mail");
 // Nodemailer transporter using environment variables
 // const transporter = nodemailer.createTransport({
 //   service: "gmail",
@@ -11,6 +11,8 @@ const User = require("../models/User.model");
 //     pass: process.env.EMAIL_PASS,
 //   },
 // });
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 const transporter = nodemailer.createTransport({
   host: "smtp.sendgrid.net",
   port: 587,
@@ -27,6 +29,33 @@ const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
 // Send OTP to user's email
+// const sendOTP = async (req, res) => {
+//   const { email } = req.body;
+
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user)
+//       return res.status(404).json({ message: "User not found" });
+
+//     const otp = generateOTP();
+//     user.otp = otp;
+//     user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 min expiry
+//     await user.save();
+
+//     await transporter.sendMail({
+//      from: `"Salon App Support" <aryan.dev1066@gmail.com>`,
+//       to: email,
+//       subject: "Your OTP for Password Reset",
+//       text: `Hi ${user.name || "User"},\n\nYour OTP for password reset is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nRegards,\nSalon App Team`,
+//     });
+
+//     res.status(200).json({ message: "OTP sent successfully" });
+//   } catch (error) {
+//     console.error("Error sending OTP:", error);
+//     res.status(500).json({ message: "Failed to send OTP" });
+//   }
+// };
+
 const sendOTP = async (req, res) => {
   const { email } = req.body;
 
@@ -37,15 +66,18 @@ const sendOTP = async (req, res) => {
 
     const otp = generateOTP();
     user.otp = otp;
-    user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 min expiry
+    user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    await transporter.sendMail({
-     from: `"Salon App Support" <aryan.dev1066@gmail.com>`,
+    const msg = {
       to: email,
+      from: "aryan.dev1066@gmail.com", // MUST be verified in SendGrid
       subject: "Your OTP for Password Reset",
-      text: `Hi ${user.name || "User"},\n\nYour OTP for password reset is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nRegards,\nSalon App Team`,
-    });
+      text: `Hi ${user.name || "User"}, Your OTP is ${otp}`,
+      html: `<strong>Hi ${user.name || "User"},</strong><p>Your OTP is <b>${otp}</b></p>`,
+    };
+
+    await sgMail.send(msg);
 
     res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
@@ -53,7 +85,6 @@ const sendOTP = async (req, res) => {
     res.status(500).json({ message: "Failed to send OTP" });
   }
 };
-
 // Verify OTP
 const verifyOTP = async (req, res) => {
   const { otp } = req.body;
