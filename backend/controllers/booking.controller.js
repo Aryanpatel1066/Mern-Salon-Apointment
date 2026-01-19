@@ -179,7 +179,7 @@ exports.updateBookingStatus = async (req, res) => {
     //send mail
     if (subject && text) {
       await transporter.sendMail({
-        from: `"Salon App Support" <${process.env.EMAIL_USER}>`,
+from: `"Salon App Support" <aryan.dev1066@gmail.com>`,
         to: email,
         subject,
         text,
@@ -226,11 +226,10 @@ exports.countBooking = async (req, res) => {
     })
   }
 }
+//disable allredy book and locking sloat
 exports.getBookedSlots = async (req, res) => {
   const { date } = req.query;
   const userId = req.user?.id;
-  console.log(userId);
-  console.log("hddd")
   const bookings = await Booking.find({ date }).select("timeSlot");
   const locks = await SlotLock.find({ date, user: { $ne: userId } }).select("timeSlot");
 

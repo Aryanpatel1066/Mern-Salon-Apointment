@@ -1,6 +1,6 @@
 const SlotLock = require("../models/SlotLock.model");
 const Booking = require("../models/Booking.model");
-
+//creat locking system for slot
 exports.lockSlot = async (req, res) => {
   try {
     const { service, date, timeSlot } = req.body;

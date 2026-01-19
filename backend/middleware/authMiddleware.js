@@ -25,6 +25,7 @@ const authMiddleware = async (req, res, next) => {
         res.status(401).json({ message: "Invalid Token" });
     }
 };
+
 // Middleware to Validate Signup Request
 const verifySignupBody = async (req, res, next) => {
     try {
@@ -56,6 +57,7 @@ const verifySignupBody = async (req, res, next) => {
     }
 
 };
+
 const verifySignInBody = async (req, res, next) => {
     try {
         if (!req.body.email) {
@@ -71,7 +73,8 @@ const verifySignInBody = async (req, res, next) => {
             message: "internal error while checking signin body"
         })
     }
-}
+};
+
 // Middleware to check if user is an admin
 const isAdmin = (req, res, next) => {
     if (!req.user || req.user.role !== "admin") {

@@ -2,12 +2,10 @@ const User = require("../models/User.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-// @desc    Register New User
-// @route   POST /api/users/register
-// @access  Public
+//Register New User
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password,phone } = req.body;
+        const { name, email, password, phone } = req.body;
 
         // Check if user exists
         // let user = await User.findOne({ email });
@@ -18,7 +16,7 @@ const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create user
-       let user = new User({ name, email, password: hashedPassword ,phone});
+        let user = new User({ name, email, password: hashedPassword, phone });
         await user.save();
 
         // Generate JWT token
@@ -30,9 +28,7 @@ const registerUser = async (req, res) => {
     }
 };
 
-// @desc    Login User
-// @route   POST /api/users/login
-// @access  Public
+//Login User 
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -50,29 +46,27 @@ const loginUser = async (req, res) => {
 
         // res.status(200).json({ message: "Login Successful", token ,user});
         res.status(200).json({
-  message: "Login Successful",
-  token,
-  user: {
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  }
-});
+            message: "Login Successful",
+            token,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            }
+        });
 
     } catch (error) {
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
 
-// @desc    Get User Profile
-// @route   GET /api/users/profile
-// @access  Private
+//Get User Profile
 const getUserProfile = async (req, res) => {
     try {
         const userId = req.params.id;
 
-        const user = await User.findById(userId).select("-password");  
+        const user = await User.findById(userId).select("-password");
         if (!user) return res.status(404).json({ message: "User not found" });
 
         res.status(200).json(user);
@@ -82,17 +76,18 @@ const getUserProfile = async (req, res) => {
 };
 
 //admin side list of user
-const getAllUser = async (req,res)=>{
-    try{
-       const user = await User.find().select("-password");
-       res.status(200).json(user)
+const getAllUser = async (req, res) => {
+    try {
+        const user = await User.find().select("-password");
+        res.status(200).json(user)
     }
-    catch(err){
+    catch (err) {
         res.status(500).json({
-            message:"something went wrong now load user data"
+            message: "something went wrong now load user data"
         })
     }
 }
+
 //admin side delete user
 const deleteUser = async (req, res) => {
     try {
@@ -104,13 +99,14 @@ const deleteUser = async (req, res) => {
         res.status(500).json({ message: "Server Error", error: err.message });
     }
 };
+
 //admin side update data
 const updateUser = async (req, res) => {
     try {
-        const { name, email,phone } = req.body;
+        const { name, email, phone } = req.body;
         const updatedUser = await User.findByIdAndUpdate(
             req.params.id,
-            { name, email,phone },
+            { name, email, phone },
             { new: true, runValidators: true }
         );
 
@@ -121,16 +117,17 @@ const updateUser = async (req, res) => {
         res.status(500).json({ message: "Server Error", error: err.message });
     }
 };
+
 //admin count the total user
-const countUser = async(req,res)=>{
-    try{
-const userCount = await User.countDocuments();
-res.json({
-   count: userCount
-})
+const countUser = async (req, res) => {
+    try {
+        const userCount = await User.countDocuments();
+        res.json({
+            count: userCount
+        })
     }
-    catch(err){
-        res.status(500).json({message:"failed to count user"})
+    catch (err) {
+        res.status(500).json({ message: "failed to count user" })
     }
 }
-module.exports = { registerUser, loginUser, getUserProfile ,getAllUser,deleteUser,updateUser,countUser};
+module.exports = { registerUser, loginUser, getUserProfile, getAllUser, deleteUser, updateUser, countUser };
