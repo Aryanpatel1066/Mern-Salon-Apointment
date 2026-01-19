@@ -2,9 +2,11 @@ const mongoose = require("mongoose");
 const Booking = require("../models/Booking.model");
 const User = require("../models/User.model");
 const Service = require("../models/Service.model");
-const { transporter } = require("../utils/sendEmail");
-const Notification = require("../models/Notification.model");
+ const Notification = require("../models/Notification.model");
 const SlotLock = require("../models/SlotLock.model");
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 const STATIC_LOCATION = "382860 city:vijapur house number 123"; // Or use process.env.SALON_LOCATION
 let notificationMessage = "";
 
@@ -112,88 +114,160 @@ exports.getBookingsByUser = async (req, res) => {
 
 
 //admin update booking status
+// exports.updateBookingStatus = async (req, res) => {
+//   try {
+//     if (req.user.role !== "admin") {
+//       return res.status(403).json({ message: "Only admins can update booking status" });
+//     }
+
+//     const booking = await Booking.findById(req.params.id).populate("user").populate("service");
+
+//     if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+//     booking.status = req.body.status;
+//     await booking.save();
+
+//     // Send email based on status
+//     const { email, name } = booking.user;
+//     const { name: serviceName } = booking.service;
+
+//     const timeZone = "Asia/Kolkata";
+
+
+//     const bookingDate = new Date(booking.date);
+
+//     const date = new Intl.DateTimeFormat('en-IN', {
+//       year: 'numeric',
+//       month: 'long',
+//       day: 'numeric',
+//       timeZone,
+//     }).format(bookingDate);
+
+
+//     const time = booking.timeSlot;
+
+
+//     let subject, text;
+
+//     if (booking.status === "confirmed") {
+//       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been confirmed.`;
+
+//       subject = "Your Booking is Confirmed!";
+//       text = `Hi ${name || "User"},\n
+//       \nYour booking for "${serviceName}" has been confirmed.\n
+//       \n📅 Date: ${date}\n⏰ Time: ${time}
+//       \n📍 Location: ${STATIC_LOCATION}\n
+//       \n✅ Check your status in your profile
+//       \n💫"Time is Money so please come on time , without someone else on your sloat"
+//       \nThank you for booking with us!\n
+//       \nSalonBlis App Team`;
+//     } else if (booking.status === "cancelled") {
+//       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.`;
+
+//       subject = "Your Booking Has Been Cancelled";
+//       text = `Hi ${name || "User"},\n
+//       \nYour booking for "${serviceName}" on 📅${date} at⏰ ${time} has been cancelled.\n
+//       \nIf this was unexpected, please reach out to our support team.\n
+//       \nSalonBlis App Team`;
+//     }
+//     // Save Notification
+//     if (notificationMessage) {
+//       await Notification.create({
+//         user: booking.user._id,
+//         message: notificationMessage
+//       });
+//     }
+
+//     //send mail
+//     if (subject && text) {
+//       await transporter.sendMail({
+// from: `"Salon App Support" <aryan.dev1066@gmail.com>`,
+//         to: email,
+//         subject,
+//         text,
+//       });
+//     }
+
+
+//     res.status(200).json({ message: "Booking status updated and email sent", booking });
+//   } catch (error) {
+//     console.error("Error updating booking status:", error);
+//     res.status(500).json({ message: "Error updating booking status", error });
+//   }
+// };
+// Admin update booking status
 exports.updateBookingStatus = async (req, res) => {
   try {
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Only admins can update booking status" });
     }
 
-    const booking = await Booking.findById(req.params.id).populate("user").populate("service");
+    const booking = await Booking.findById(req.params.id)
+      .populate("user")
+      .populate("service");
 
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
     booking.status = req.body.status;
     await booking.save();
 
-    // Send email based on status
     const { email, name } = booking.user;
     const { name: serviceName } = booking.service;
 
     const timeZone = "Asia/Kolkata";
-
-
     const bookingDate = new Date(booking.date);
 
-    const date = new Intl.DateTimeFormat('en-IN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const date = new Intl.DateTimeFormat("en-IN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
       timeZone,
     }).format(bookingDate);
 
-
     const time = booking.timeSlot;
 
-
-    let subject, text;
+    let subject = "";
+    let text = "";
 
     if (booking.status === "confirmed") {
       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been confirmed.`;
-
       subject = "Your Booking is Confirmed!";
-      text = `Hi ${name || "User"},\n
-      \nYour booking for "${serviceName}" has been confirmed.\n
-      \n📅 Date: ${date}\n⏰ Time: ${time}
-      \n📍 Location: ${STATIC_LOCATION}\n
-      \n✅ Check your status in your profile
-      \n💫"Time is Money so please come on time , without someone else on your sloat"
-      \nThank you for booking with us!\n
-      \nSalonBlis App Team`;
+      text = `Hi ${name || "User"},\n\nYour booking for "${serviceName}" has been confirmed.\n\n📅 Date: ${date}\n⏰ Time: ${time}\n📍 Location: ${STATIC_LOCATION}\n\n✅ Check your status in your profile.\n\nThank you for booking with us!\nSalonBlis App Team`;
     } else if (booking.status === "cancelled") {
       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.`;
-
       subject = "Your Booking Has Been Cancelled";
-      text = `Hi ${name || "User"},\n
-      \nYour booking for "${serviceName}" on 📅${date} at⏰ ${time} has been cancelled.\n
-      \nIf this was unexpected, please reach out to our support team.\n
-      \nSalonBlis App Team`;
+      text = `Hi ${name || "User"},\n\nYour booking for "${serviceName}" on ${date} at ${time} has been cancelled.\n\nIf this was unexpected, please reach out to our support team.\n\nSalonBlis App Team`;
     }
+
     // Save Notification
     if (notificationMessage) {
       await Notification.create({
         user: booking.user._id,
-        message: notificationMessage
+        message: notificationMessage,
       });
     }
 
-    //send mail
+    // Send email (async so it doesn't delay response)
     if (subject && text) {
-      await transporter.sendMail({
-from: `"Salon App Support" <aryan.dev1066@gmail.com>`,
+      const msg = {
         to: email,
+        from: "aryan.dev1066@gmail.com", // VERIFIED IN SENDGRID
         subject,
         text,
-      });
+        html: `<p>${text.replace(/\n/g, "<br/>")}</p>`,
+      };
+
+      sgMail.send(msg)
+        .then(() => console.log("Email sent successfully"))
+        .catch(err => console.error("SendGrid email error:", err.response?.body || err));
     }
 
-
-    res.status(200).json({ message: "Booking status updated and email sent", booking });
+    res.status(200).json({ message: "Booking status updated", booking });
   } catch (error) {
     console.error("Error updating booking status:", error);
     res.status(500).json({ message: "Error updating booking status", error });
   }
 };
-
 // Delete a booking ADmin only
 exports.deleteBooking = async (req, res) => {
   try {
