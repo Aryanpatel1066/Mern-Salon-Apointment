@@ -6,11 +6,15 @@ import Navbar from "../components/Navbar";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+import ConfirmDialog from "../components/ConfirmDailog";
 
 const BookingForm = () => {
   const navigate = useNavigate();
+  // Tomorrow min date
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const [date, setDate] = useState(null);
+  const [date, setDate] = useState(tomorrow);
   const [timeSlot, setTimeSlot] = useState("");
   const [serviceId, setServiceId] = useState(null);
   const [servicePrice, setServicePrice] = useState(null);
@@ -20,25 +24,14 @@ const BookingForm = () => {
 
   const [lockExpiresAt, setLockExpiresAt] = useState(null);
   const [timer, setTimer] = useState(0);
+  const [timeSlots, setTimeSlots] = useState([]);
 
   const [closedDays, setClosedDays] = useState([]);
 
   const token = localStorage.getItem("token");
+  const [confirmBooking, setConfirmBooking] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
-  const timeSlots = [
-    "7AM to 8AM",
-    "8AM to 9AM",
-    "9AM to 10AM",
-    "10AM to 11AM",
-    "11AM to 12PM",
-    "12PM to 1PM",
-    "1PM to 2PM",
-    "2PM to 3PM",
-    "3PM to 4PM",
-    "4PM to 5PM",
-    "5PM to 6PM",
-    "6PM to 7PM",
-  ];
 
   // Format date to YYYY-MM-DD (local)
   const fmt = (d) => {
@@ -48,9 +41,6 @@ const BookingForm = () => {
     return `${y}-${m}-${dd}`;
   };
 
-  // Tomorrow min date
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
 
   // Load service from localStorage
   useEffect(() => {
@@ -79,6 +69,24 @@ const BookingForm = () => {
     };
     fetchClosedDays();
   }, []);
+  useEffect(() => {
+    if (!date) return;
+
+    const fetchTimeSlots = async () => {
+      try {
+        const res = await api.get("/time-slots", {
+          params: { date: fmt(date) },
+        });
+
+        setTimeSlots(res.data.slots || []);
+      } catch (err) {
+        toast.error("Failed to load time slots");
+        setTimeSlots([]);
+      }
+    };
+
+    fetchTimeSlots();
+  }, [date]);
 
   // Fetch booked + locked slots when date changes
   useEffect(() => {
@@ -146,13 +154,18 @@ const BookingForm = () => {
     return () => clearInterval(interval);
   }, [lockExpiresAt]);
 
-  // Submit booking
-  const handleSubmit = async () => {
+  
+  const handleSubmitRequest = () => {
     if (!date || !timeSlot || !serviceId) {
       return toast.error("❌ Please select date and time");
     }
 
+    setConfirmBooking(true);
+  };
+  const handleBookingConfirm = async () => {
     try {
+      setBookingLoading(true);
+
       await api.post("/booking", {
         service: serviceId,
         date: fmt(date),
@@ -163,6 +176,9 @@ const BookingForm = () => {
       navigate("/success");
     } catch (err) {
       toast.error(err?.response?.data?.message || "Booking failed");
+    } finally {
+      setBookingLoading(false);
+      setConfirmBooking(false);
     }
   };
 
@@ -211,14 +227,13 @@ const BookingForm = () => {
                 disabled={booked || locked}
                 onClick={() => lockSlot(slot)}
                 className={`p-2 rounded text-sm border transition
-                  ${
-                    booked
-                      ? "bg-gray-400 text-white cursor-not-allowed"
-                      : locked
-                        ? "bg-yellow-400 text-black cursor-not-allowed"
-                        : selected
-                          ? "bg-pink-500 text-white"
-                          : "hover:bg-pink-100"
+                  ${booked
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : locked
+                      ? "bg-yellow-400 text-black cursor-not-allowed"
+                      : selected
+                        ? "bg-pink-500 text-white"
+                        : "hover:bg-pink-100"
                   }`}
               >
                 {slot}
@@ -242,11 +257,22 @@ const BookingForm = () => {
 
         {/* Submit */}
         <button
-          onClick={handleSubmit}
+          onClick={handleSubmitRequest}
           className="w-full bg-pink-500 text-white py-2 rounded hover:bg-pink-600"
         >
           Book Now
         </button>
+        <ConfirmDialog
+          open={confirmBooking}
+          title="Confirm Booking"
+          message={`Confirm booking on ${fmt(date)} at ${timeSlot}?`}
+          confirmText="Yes, Book"
+          cancelText="Cancel"
+          loading={bookingLoading}
+          onCancel={() => !bookingLoading && setConfirmBooking(false)}
+          onConfirm={handleBookingConfirm}
+        />
+
       </div>
     </div>
   );

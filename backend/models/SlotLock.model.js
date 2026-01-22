@@ -12,7 +12,6 @@ const slotLockSchema = new mongoose.Schema(
 );
 
 /**
- * 🔥 IMPORTANT
  * MongoDB will auto-delete this document when expiresAt < now
  */
 slotLockSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

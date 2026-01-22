@@ -17,5 +17,4 @@ router.get("/", getAllServices); // Get all services
 router.post("/", authMiddleware, isAdmin, createService); // Create new service
 router.put("/:id", authMiddleware, isAdmin, updateService); // Update service
 router.delete("/:id", authMiddleware, isAdmin, deleteService); // Delete service
-router.get("/admin/serviceCount",authMiddleware,serviceCount)
-module.exports = router;
+ module.exports = router;

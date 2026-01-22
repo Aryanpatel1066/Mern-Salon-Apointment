@@ -11,14 +11,12 @@ const authMiddleware = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-        console.log("Decoded Token:", decoded);  // ✅ Log decoded token
 
         const user = await User.findById(decoded.userId);
-        console.log("User Found in DB:", user);  // ✅ Log fetched user
-
+ 
         if (!user) return res.status(401).json({ message: "User not found" });
 
-        req.user = { id: user._id, role: user.role }; // ✅ Ensure role is present
+        req.user = { id: user._id, role: user.role }; 
         next();
     } catch (error) {
         console.error("JWT Verification Error:", error);

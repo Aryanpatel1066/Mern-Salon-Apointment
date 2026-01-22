@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-import { Home, Scissors, Users, CalendarCheck,CalendarX } from "lucide-react";
+import { Home, Scissors, Users, CalendarCheck,CalendarX,CalendarClock } from "lucide-react";
 
 function AdminSidebar() {
   return (
@@ -50,6 +50,15 @@ function AdminSidebar() {
             >
               <CalendarX size={18} />
               <span>Closed Days</span>
+            </Link>
+          </li>
+           <li>
+            <Link
+              to="/admin/time-sloat"
+              className="flex items-center space-x-2 hover:text-pink-600 transition"
+            >
+              <CalendarClock size={18} />
+              <span>Time Management</span>
             </Link>
           </li>
         </ul>

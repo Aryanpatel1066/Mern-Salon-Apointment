@@ -3,7 +3,6 @@ const Service = require("../models/Service.model");
 // ✅ Create a new service by admin
 const createService = async (req, res) => {
     try {
-        console.log("🟡 Received Body:", req.body); // ✅ Debugging line
 
         const { name, description, price, duration, available } = req.body;
 
@@ -20,7 +19,6 @@ const createService = async (req, res) => {
         });
 
         await newService.save();
-        console.log("✅ Service Created:", newService); // ✅ Debugging line
         res.status(201).json({ message: "Service added successfully", service: newService });
     } catch (error) {
         console.error("❌ Error creating service:", error);
@@ -64,24 +62,9 @@ const deleteService = async (req, res) => {
     }
 };
 
-//service count
-const serviceCount = async (req, res) => {
-    try {
-        const serviceCounting = await Service.countDocuments();
-        res.json({
-            count: serviceCounting
-        })
-    }
-    catch (err) {
-        err.status(500).json({
-            message: "failed to fetch service count"
-        })
-    }
-}
 module.exports = {
     createService,
     getAllServices,
     updateService,
     deleteService,
-    serviceCount,
 };
