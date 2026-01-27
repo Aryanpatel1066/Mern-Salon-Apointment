@@ -1,62 +1,37 @@
- require("dotenv").config();
-const nodemailer = require("nodemailer");
-const bcrypt = require("bcryptjs");
-const User = require("../models/User.model");
-const sgMail = require("@sendgrid/mail");
-// Nodemailer transporter using environment variables
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     user: process.env.EMAIL_USER,
-//     pass: process.env.EMAIL_PASS,
-//   },
-// });
+import dotenv from "dotenv";
+dotenv.config();
+
+import bcrypt from "bcryptjs";
+import sgMail from "@sendgrid/mail";
+import User from "../models/User.model.js";
+import { generateOTP, hashOTP } from "../helpers/otp.helper.js";
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.sendgrid.net",
-  port: 587,
-  secure: false,
-  auth: {
-    user: "apikey",
-    pass: process.env.SENDGRID_API_KEY,
-  },
-});
+/* ----------------------------------
+   Helper: Send OTP Email
+----------------------------------- */
+const sendOtpMail = async (email, otp, name = "User") => {
+  await sgMail.send({
+    to: email,
+    from: "aryan.dev1066@gmail.com", // MUST be verified in SendGrid
+    subject: "Your OTP for Password Reset",
+    html: `
+      <div style="font-family: Arial, sans-serif">
+        <h3>Hello ${name},</h3>
+        <p>Your OTP for password reset is:</p>
+        <h2 style="letter-spacing:2px">${otp}</h2>
+        <p>This OTP will expire in <b>10 minutes</b>.</p>
+        <p>If you didn’t request this, please ignore this email.</p>
+      </div>
+    `,
+  });
+};
 
-
-// Generate 6-digit OTP
-const generateOTP = () =>
-  Math.floor(100000 + Math.random() * 900000).toString();
-
-// Send OTP to user's email
-// const sendOTP = async (req, res) => {
-//   const { email } = req.body;
-
-//   try {
-//     const user = await User.findOne({ email });
-//     if (!user)
-//       return res.status(404).json({ message: "User not found" });
-
-//     const otp = generateOTP();
-//     user.otp = otp;
-//     user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 min expiry
-//     await user.save();
-
-//     await transporter.sendMail({
-//      from: `"Salon App Support" <aryan.dev1066@gmail.com>`,
-//       to: email,
-//       subject: "Your OTP for Password Reset",
-//       text: `Hi ${user.name || "User"},\n\nYour OTP for password reset is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nRegards,\nSalon App Team`,
-//     });
-
-//     res.status(200).json({ message: "OTP sent successfully" });
-//   } catch (error) {
-//     console.error("Error sending OTP:", error);
-//     res.status(500).json({ message: "Failed to send OTP" });
-//   }
-// };
-
-const sendOTP = async (req, res) => {
+/* ----------------------------------
+   SEND OTP
+----------------------------------- */
+export const sendOTP = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -65,36 +40,67 @@ const sendOTP = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
 
     const otp = generateOTP();
-    user.otp = otp;
-    user.otpExpires = Date.now() + 10 * 60 * 1000;
+
+    user.otp = hashOTP(otp);
+    user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 min
     await user.save();
 
-    const msg = {
-      to: email,
-      from: "aryan.dev1066@gmail.com", // MUST be verified in SendGrid
-      subject: "Your OTP for Password Reset",
-      text: `Hi ${user.name || "User"}, Your OTP is ${otp}`,
-      html: `<strong>Hi ${user.name || "User"},</strong><p>Your OTP is <b>${otp}</b></p>`,
-    };
+    await sendOtpMail(email, otp, user.name);
 
-    await sgMail.send(msg);
-
-    res.status(200).json({ message: "OTP sent successfully" });
+    res.json({ message: "OTP sent successfully" });
   } catch (error) {
-    console.error("Error sending OTP:", error);
+    console.error("Send OTP error:", error);
     res.status(500).json({ message: "Failed to send OTP" });
   }
 };
-// Verify OTP
-const verifyOTP = async (req, res) => {
-  const { otp } = req.body;
- 
-  if (!otp) {
-    return res.status(400).json({ message: "OTP is required" });
-  }
+
+/* ----------------------------------
+   RESEND OTP (with cooldown)
+----------------------------------- */
+export const resendOTP = async (req, res) => {
+  const { email } = req.body;
+
   try {
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    // ⏳ 2-minute cooldown
+    if (user.otpExpires && user.otpExpires - Date.now() > 8 * 60 * 1000) {
+      return res
+        .status(429)
+        .json({ message: "Please wait before resending OTP" });
+    }
+
+    const otp = generateOTP();
+
+    user.otp = hashOTP(otp);
+    user.otpExpires = Date.now() + 10 * 60 * 1000;
+    await user.save();
+
+    await sendOtpMail(email, otp, user.name);
+
+    res.json({ message: "OTP resent successfully" });
+  } catch (error) {
+    console.error("Resend OTP error:", error);
+    res.status(500).json({ message: "Failed to resend OTP" });
+  }
+};
+
+/* ----------------------------------
+   VERIFY OTP
+----------------------------------- */
+export const verifyOTP = async (req, res) => {
+  const { otp } = req.body;
+
+  if (!otp)
+    return res.status(400).json({ message: "OTP is required" });
+
+  try {
+    const hashedOtp = hashOTP(otp);
+
     const user = await User.findOne({
-      otp,
+      otp: hashedOtp,
       otpExpires: { $gt: Date.now() },
     });
 
@@ -102,48 +108,44 @@ const verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
-    res.status(200).json({ message: "OTP Verified" });
+    res.json({ message: "OTP verified" });
   } catch (error) {
-    console.error("OTP verification error:", error);
+    console.error(error);
     res.status(500).json({ message: "OTP verification failed" });
   }
 };
 
-// Reset password using OTP
-const resetPassword = async (req, res) => {
+/* ----------------------------------
+   RESET PASSWORD
+----------------------------------- */
+export const resetPassword = async (req, res) => {
   const { otp, newPassword } = req.body;
 
-  if (!otp || !newPassword) {
+  if (!otp || !newPassword)
     return res
       .status(400)
       .json({ message: "OTP and new password are required" });
-  }
 
   try {
+    const hashedOtp = hashOTP(otp);
+
     const user = await User.findOne({
-      otp,
+      otp: hashedOtp,
       otpExpires: { $gt: Date.now() },
     });
 
-    if (!user) {
-      return res.status(404).json({ message: "Invalid or expired OTP" });
-    }
+    if (!user)
+      return res.status(400).json({ message: "Invalid or expired OTP" });
 
-    user.password = bcrypt.hashSync(newPassword, 8);
+    user.password = bcrypt.hashSync(newPassword, 10);
     user.otp = undefined;
     user.otpExpires = undefined;
 
     await user.save();
 
-    res.status(200).json({ message: "Password reset successful" });
+    res.json({ message: "Password reset successful" });
   } catch (error) {
-    console.error("Error resetting password:", error);
+    console.error("Reset password error:", error);
     res.status(500).json({ message: "Password reset failed" });
   }
-};
-module.exports = {
-  sendOTP,
-  verifyOTP,
-  resetPassword,
-  transporter,
 };

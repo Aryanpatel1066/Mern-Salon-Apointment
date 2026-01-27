@@ -4,6 +4,7 @@ const {
   sendOTP,
   verifyOTP,
   resetPassword,
+  resendOTP
 } = require("../utils/sendEmail");
 
 // Route: Send OTP
@@ -14,5 +15,8 @@ router.post("/verify-otp", verifyOTP);
 
 // Route: Reset Password
 router.post("/reset-password", resetPassword);
+
+//Route: Resend OTP
+router.post("/resend-otp", resendOTP);
 
 module.exports = router;
