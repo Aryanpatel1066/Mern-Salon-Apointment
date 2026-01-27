@@ -1,10 +1,11 @@
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
 dotenv.config();
 
-import bcrypt from "bcryptjs";
-import sgMail from "@sendgrid/mail";
-import User from "../models/User.model.js";
-import { generateOTP, hashOTP } from "../helpers/otp.helper.js";
+const bcrypt = require("bcryptjs");
+const sgMail = require("@sendgrid/mail");
+
+const User = require("../models/User.model");
+const { generateOTP, hashOTP } = require("../helpers/otp.helper.js");
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -31,7 +32,7 @@ const sendOtpMail = async (email, otp, name = "User") => {
 /* ----------------------------------
    SEND OTP
 ----------------------------------- */
-export const sendOTP = async (req, res) => {
+exports.sendOTP = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -57,7 +58,7 @@ export const sendOTP = async (req, res) => {
 /* ----------------------------------
    RESEND OTP (with cooldown)
 ----------------------------------- */
-export const resendOTP = async (req, res) => {
+exports.resendOTP = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -90,7 +91,7 @@ export const resendOTP = async (req, res) => {
 /* ----------------------------------
    VERIFY OTP
 ----------------------------------- */
-export const verifyOTP = async (req, res) => {
+exports.verifyOTP = async (req, res) => {
   const { otp } = req.body;
 
   if (!otp)
@@ -118,7 +119,7 @@ export const verifyOTP = async (req, res) => {
 /* ----------------------------------
    RESET PASSWORD
 ----------------------------------- */
-export const resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res) => {
   const { otp, newPassword } = req.body;
 
   if (!otp || !newPassword)
