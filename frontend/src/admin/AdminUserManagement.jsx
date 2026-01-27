@@ -1,59 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import api from "../api/api";
 import { Dialog } from "@headlessui/react";
+import { toast } from "react-toastify";
+
+import useAdminUserManagement from "../hooks/adminHooks/useAdminUserManagement";
 
 function AdminUserManagement() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Modal state
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [formData, setFormData] = useState({ name: "", email: "",phone:"" });
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await api.get("/users/admin/userList");
-      setUsers(res.data);
-      setLoading(false);
-    } catch (err) {
-      setError("Failed to load user data");
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (userId) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-    try {
-      await api.delete(`/users/admin/userDelete/${userId}`);
-      setUsers(users.filter((u) => u._id !== userId));
-    } catch (err) {
-      alert("Failed to delete user");
-    }
-  };
-
-  const openEditModal = (user) => {
-    setSelectedUser(user);
-    setFormData({ name: user.name, email: user.email,phone: user.phone });
-    setIsOpen(true);
-  };
-
-  const handleEditSubmit = async () => {
-    try {
-      const res = await api.put(`/users/admin/userupdate/${selectedUser._id}`, formData);
-      setUsers(
-        users.map((u) => (u._id === selectedUser._id ? res.data.user : u))
-      );
-      setIsOpen(false);
-    } catch (err) {
-      alert("Failed to update user");
-    }
-  };
+  const {
+    users,
+    loading,
+    error,
+    isOpen,
+    setIsOpen,
+    selectedUser,
+    formData,
+    setFormData,
+    handleDelete,
+    openEditModal,
+    handleEditSubmit,
+  } = useAdminUserManagement();
 
   if (loading) return <div className="p-4 text-center">Loading users...</div>;
   if (error) return <div className="p-4 text-red-500">{error}</div>;
@@ -67,8 +32,7 @@ function AdminUserManagement() {
             <tr>
               <th className="text-left py-2 px-4 border-b">Name</th>
               <th className="text-left py-2 px-4 border-b">Email</th>
-             <th className="text-left py-2 px-4 border-b">Mobile</th>
-
+              <th className="text-left py-2 px-4 border-b">Mobile</th>
               <th className="text-left py-2 px-4 border-b">Actions</th>
             </tr>
           </thead>
@@ -78,7 +42,6 @@ function AdminUserManagement() {
                 <td className="py-2 px-4 border-b">{user.name}</td>
                 <td className="py-2 px-4 border-b">{user.email}</td>
                 <td className="py-2 px-4 border-b">{user.phone}</td>
-
                 <td className="py-2 px-4 border-b space-x-2">
                   <button
                     onClick={() => openEditModal(user)}
@@ -124,16 +87,12 @@ function AdminUserManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Mobile
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Mobile</label>
                 <input
                   type="text"
                   className="mt-1 w-full border px-3 py-2 rounded"
                   value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
               </div>
               <div className="flex justify-end space-x-2 mt-4">

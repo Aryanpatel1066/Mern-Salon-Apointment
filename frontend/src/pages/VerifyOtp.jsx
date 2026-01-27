@@ -1,24 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast, ToastContainer, Bounce } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { IoArrowBack } from "react-icons/io5";
 import api from "../api/api";
-import { IoArrowBack } from "react-icons/io5"; // Using react-icons for the back arrow icon
-import { NavLink } from "react-router-dom";
+import useOtp from "../hooks/useOtp";
+
 function VerifyOtp() {
   const [otp, setOtp] = useState("");
-  const navigate = useNavigate();
-  const location = useLocation();
-  const email = location.state?.email;
+  const [timer, setTimer] = useState(60);
+  const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const email = state?.email;
+
+  const { resendOtp, loading } = useOtp();
+
+  useEffect(() => {
+    if (!email) {
+      navigate("/forgot-password");
+    }
+  }, [email, navigate]);
+
+  useEffect(() => {
+    if (timer > 0) {
+      const id = setTimeout(() => setTimer((t) => t - 1), 1000);
+      return () => clearTimeout(id);
+    }
+  }, [timer]);
+
+  const verifyOtp = async (e) => {
     e.preventDefault();
+    setError("");
+    setVerifying(true);
+
     try {
-      await api.post("email/verify-otp", { otp });
-      toast.success("✅ OTP verified successfully!", { autoClose: 2000 });
-      setTimeout(() => navigate("/reset-password", { state: { otp } }), 2000);
+      await api.post("/email/verify-otp", { otp });
+      navigate("/reset-password", { state: { otp } });
     } catch (err) {
-      toast.error(`❌ ${err.response?.data?.message || "Invalid OTP"}`);
+      setError(err.response?.data?.message || "Invalid or expired OTP");
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -26,24 +48,53 @@ function VerifyOtp() {
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
         <h2 className="text-2xl font-bold text-center mb-6">Verify OTP</h2>
-        <form onSubmit={handleSubmit}>
+
+        <form onSubmit={verifyOtp} className="space-y-4">
           <input
             type="text"
+            placeholder="Enter 6-digit OTP"
             value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            placeholder="Enter OTP"
+            maxLength={6}
             required
-            className="w-full p-2 border rounded mb-4"
+            onChange={(e) => setOtp(e.target.value)}
+            className="w-full p-2 border rounded text-center tracking-widest"
           />
-          <button type="submit" className="w-full bg-green-500 text-white p-2 rounded">
-            Verify OTP
+
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+          <button
+            disabled={verifying}
+            className={`w-full p-2 rounded text-white ${
+              verifying
+                ? "bg-green-400 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600"
+            }`}
+          >
+            {verifying ? "Verifying..." : "Verify OTP"}
           </button>
-          <button className="w-15 bg-green-500 text-white p-2 m-5 rounded flex items-center justify-center space-x-2 hover:bg-green-600 transition-colors">
-  <IoArrowBack className="text-white" />  
-  <NavLink to="/forgot-password" className="text-white">Back</NavLink>
-</button>
         </form>
-        <ToastContainer position="top-right" autoClose={2000} transition={Bounce} />
+
+        <button
+          disabled={timer > 0 || loading}
+          onClick={() => {
+            resendOtp(email);
+            setTimer(60);
+          }}
+          className={`mt-4 w-full p-2 rounded ${
+            timer > 0
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-500 text-white hover:bg-blue-600"
+          }`}
+        >
+          {timer > 0 ? `Resend in ${timer}s` : "Resend OTP"}
+        </button>
+
+        <button
+          onClick={() => navigate("/forgot-password")}
+          className="mt-4 w-full bg-green-500 text-white p-2 rounded flex items-center justify-center gap-2 hover:bg-green-600"
+        >
+          <IoArrowBack /> Back
+        </button>
       </div>
     </div>
   );

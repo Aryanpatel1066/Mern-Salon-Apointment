@@ -1,45 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api/api';
-import { Trash2 } from 'lucide-react';
-// import axios from axios;
+import { Trash2 } from "lucide-react";
+import useBookings from "../hooks/adminHooks/useBookings";
+
 function AdminBookingManagement() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchBookings = async () => {
-    try {
-      const res = await api.get('/booking/'); // admin route
-      setBookings(res.data);
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const handleStatusChange = async (id, status) => {
-    console.log(id,status)
-    try {
-      await api.patch(`/booking/${id}/status`, { status });
-      fetchBookings();
-    } catch (error) {
-      console.error("Failed to update status", error);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this booking?")) return;
-    try {
-      await api.delete(`/booking/${id}`);
-      fetchBookings();
-    } catch (error) {
-      console.error("Error deleting booking:", error);
-    }
-  };
+  const { bookings, loading, updateStatus, deleteBooking } = useBookings();
 
   if (loading) return <p className="p-4 text-gray-600">Loading bookings...</p>;
 
@@ -56,21 +19,22 @@ function AdminBookingManagement() {
               key={booking._id}
               className="bg-white border rounded-lg p-4 shadow flex flex-col md:flex-row md:items-center justify-between"
             >
-              <div className="space-y-1 mb-4 md:mb-0">
+              <div className="space-y-1">
                 <p className="font-semibold text-lg">{booking.service?.name}</p>
                 <p className="text-sm text-gray-600">
-                  🗓️ {new Date(booking.date).toLocaleDateString()} • ⏰ {booking.timeSlot}
+                  🗓️ {new Date(booking.date).toLocaleDateString()} • ⏰{" "}
+                  {booking.timeSlot}
                 </p>
                 <p className="text-sm text-gray-500">
                   👤 {booking.user?.name} • 📧 {booking.user?.email}
                 </p>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 mt-4 md:mt-0">
                 <select
                   value={booking.status}
-                  onChange={(e) => handleStatusChange(booking._id, e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-1 text-sm"
+                  onChange={(e) => updateStatus(booking._id, e.target.value)}
+                  className="border rounded px-3 py-1 text-sm"
                 >
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
@@ -78,7 +42,7 @@ function AdminBookingManagement() {
                 </select>
 
                 <button
-                  onClick={() => handleDelete(booking._id)}
+                  onClick={() => deleteBooking(booking._id)}
                   className="bg-red-600 hover:bg-red-700 text-white p-2 rounded"
                 >
                   <Trash2 size={18} />

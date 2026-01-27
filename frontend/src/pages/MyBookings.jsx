@@ -54,7 +54,7 @@ function MyBookings() {
 
     const interval = setInterval(() => {
       loadBooking();
-    }, 2000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [userId]);
@@ -73,7 +73,7 @@ function MyBookings() {
         return "bg-gray-100 text-gray-800";
     }
   };
- 
+
   const handleDeleteRequest = (bookingId) => {
     setConfirmDelete({ open: true, bookingId });
   };
@@ -95,7 +95,9 @@ function MyBookings() {
       toast.success("✅ Booking cancelled successfully");
       loadBooking();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "❌ Failed to cancel booking");
+      toast.error(
+        err?.response?.data?.message || "❌ Failed to cancel booking",
+      );
     } finally {
       setDeleting(false);
       setConfirmDelete({ open: false, bookingId: null });
@@ -121,14 +123,11 @@ function MyBookings() {
               alt="No bookings"
               className="w-64 mb-6 opacity-80"
             />
-            <p className="text-gray-500 text-lg">
-              No bookings yet
-            </p>
+            <p className="text-gray-500 text-lg">No bookings yet</p>
             <p className="text-gray-400 text-sm">
               Book a service to see it here ✂️
             </p>
           </div>
-
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {bookings.map((booking) => (
@@ -140,10 +139,18 @@ function MyBookings() {
                 {booking.status === "pending" && (
                   <div className="absolute top-3 right-3">
                     <button
-                      onClick={() => setOpenMenu(openMenu === booking._id ? null : booking._id)}
+                      onClick={() =>
+                        setOpenMenu(
+                          openMenu === booking._id ? null : booking._id,
+                        )
+                      }
                       className="text-gray-600 hover:text-gray-800 p-1"
                     >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        className="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                       </svg>
                     </button>
@@ -183,7 +190,7 @@ function MyBookings() {
                   </p>
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getStatusStyles(
-                      booking.status
+                      booking.status,
                     )}`}
                   >
                     {booking.status}
@@ -202,8 +209,7 @@ function MyBookings() {
         cancelText="No, Keep"
         loading={deleting}
         onCancel={() =>
-          !deleting &&
-          setConfirmDelete({ open: false, bookingId: null })
+          !deleting && setConfirmDelete({ open: false, bookingId: null })
         }
         onConfirm={handleDeleteConfirm}
       />
@@ -213,9 +219,7 @@ function MyBookings() {
         message="Do you want to edit this booking?"
         confirmText="Yes, Edit"
         cancelText="Cancel"
-        onCancel={() =>
-          setConfirmEdit({ open: false, booking: null })
-        }
+        onCancel={() => setConfirmEdit({ open: false, booking: null })}
         onConfirm={handleEditConfirm}
       />
 

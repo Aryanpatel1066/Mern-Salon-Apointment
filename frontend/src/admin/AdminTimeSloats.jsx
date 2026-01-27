@@ -1,26 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import api from "../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ConfirmDialog from "../components/ConfirmDailog";
 
+import useAdminTimeSlots from "../hooks/adminHooks/useAdminTimeSlots";
+
 const AdminTimeSlots = () => {
-  // Default slots management
-  const [defaultSlots, setDefaultSlots] = useState([]);
-  const [newDefaultSlot, setNewDefaultSlot] = useState("");
-  const [loadingDefault, setLoadingDefault] = useState(false);
+  const {defaultSlots,newDefaultSlot,setNewDefaultSlot,loadingDefault, addDefaultSlot,removeDefaultSlot,saveDefaultSlots,resetDefaultSlots,  selectedDate,
+    setSelectedDate, customSlots,newCustomSlot,setNewCustomSlot,  loadingCustom, addCustomSlot,removeCustomSlot,saveCustomSlots, deleteDateSlots,loadDefaultTemplate,
+     allDateSlots,fmt,} = useAdminTimeSlots();
 
-  // Date-specific slots management
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [customSlots, setCustomSlots] = useState([]);
-  const [newCustomSlot, setNewCustomSlot] = useState("");
-  const [loadingCustom, setLoadingCustom] = useState(false);
-
-  // All date-specific slots
-  const [allDateSlots, setAllDateSlots] = useState([]);
-  
   // Confirm dialog state
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({
@@ -31,17 +22,20 @@ const AdminTimeSlots = () => {
     onConfirm: () => {},
   });
 
-  // Format date to YYYY-MM-DD
-  const fmt = (d) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${dd}`;
-  };
-
   // Open confirm dialog helper
-  const openConfirm = ({ title, message, confirmText = "Confirm", onConfirm }) => {
-    setConfirmConfig({ title, message, confirmText, loading: false, onConfirm });
+  const openConfirm = ({
+    title,
+    message,
+    confirmText = "Confirm",
+    onConfirm,
+  }) => {
+    setConfirmConfig({
+      title,
+      message,
+      confirmText,
+      loading: false,
+      onConfirm,
+    });
     setConfirmOpen(true);
   };
 
@@ -57,93 +51,17 @@ const AdminTimeSlots = () => {
     });
   };
 
-  // Fetch default slots
-  useEffect(() => {
-    fetchDefaultSlots();
-    fetchAllDateSlots();
-  }, []);
-
-  const fetchDefaultSlots = async () => {
-    try {
-      const res = await api.get("/time-slots");
-      setDefaultSlots(res.data.slots || []);
-    } catch (error) {
-      toast.error("Failed to load default slots");
-    }
-  };
-
-  const fetchAllDateSlots = async () => {
-    try {
-      const res = await api.get("/time-slots/date-specific");
-      setAllDateSlots(res.data || []);
-    } catch (error) {
-      console.error("Failed to load date-specific slots:", error);
-    }
-  };
-
-  // Fetch slots for selected date
-  useEffect(() => {
-    if (selectedDate) {
-      fetchSlotsForDate();
-    }
-  }, [selectedDate]);
-
-  const fetchSlotsForDate = async () => {
-    try {
-      const res = await api.get("/time-slots", {
-        params: { date: fmt(selectedDate) },
-      });
-
-      if (res.data.isCustom) {
-        setCustomSlots(res.data.slots);
-      } else {
-        setCustomSlots([...defaultSlots]);
-      }
-    } catch (error) {
-      setCustomSlots([...defaultSlots]);
-    }
-  };
-
-  // ========== DEFAULT SLOTS HANDLERS ==========
-  const handleAddDefaultSlot = () => {
-    if (newDefaultSlot.trim()) {
-      setDefaultSlots([...defaultSlots, newDefaultSlot.trim()]);
-      setNewDefaultSlot("");
-    }
-  };
-
-  const handleRemoveDefaultSlot = (index) => {
-    setDefaultSlots(defaultSlots.filter((_, i) => i !== index));
-  };
-
-  const handleSaveDefaultSlots = async () => {
-    if (defaultSlots.length === 0) {
-      toast.error("At least one time slot is required");
-      return;
-    }
-
-    setLoadingDefault(true);
-    try {
-      await api.put("/time-slots/default", { slots: defaultSlots });
-      toast.success("✅ Default time slots updated");
-      fetchDefaultSlots();
-    } catch (error) {
-      toast.error("Failed to update default slots");
-    } finally {
-      setLoadingDefault(false);
-    }
-  };
-
+  // Override reset and delete to use confirm
   const handleResetDefaultSlots = () => {
     openConfirm({
       title: "Reset Default Slots",
-      message: "This will reset all default slots to system defaults. Continue?",
+      message:
+        "This will reset all default slots to system defaults. Continue?",
       confirmText: "Reset",
       onConfirm: async () => {
         setConfirmConfig((prev) => ({ ...prev, loading: true }));
         try {
-          const res = await api.post("/time-slots/default/reset");
-          setDefaultSlots(res.data.slots);
+          await resetDefaultSlots();
           toast.success("✅ Default slots reset");
           closeConfirm();
         } catch (error) {
@@ -154,44 +72,6 @@ const AdminTimeSlots = () => {
     });
   };
 
-  // ========== DATE-SPECIFIC SLOTS HANDLERS ==========
-  const handleAddCustomSlot = () => {
-    if (newCustomSlot.trim()) {
-      setCustomSlots([...customSlots, newCustomSlot.trim()]);
-      setNewCustomSlot("");
-    }
-  };
-
-  const handleRemoveCustomSlot = (index) => {
-    setCustomSlots(customSlots.filter((_, i) => i !== index));
-  };
-
-  const handleSaveCustomSlots = async () => {
-    if (!selectedDate) {
-      toast.error("Please select a date");
-      return;
-    }
-
-    if (customSlots.length === 0) {
-      toast.error("At least one time slot is required");
-      return;
-    }
-
-    setLoadingCustom(true);
-    try {
-      await api.post("/time-slots/date-specific", {
-        date: fmt(selectedDate),
-        slots: customSlots,
-      });
-      toast.success(`✅ Custom slots saved for ${fmt(selectedDate)}`);
-      fetchAllDateSlots();
-    } catch (error) {
-      toast.error("Failed to save custom slots");
-    } finally {
-      setLoadingCustom(false);
-    }
-  };
-
   const handleDeleteDateSlots = (date) => {
     openConfirm({
       title: "Delete Custom Slots",
@@ -200,13 +80,8 @@ const AdminTimeSlots = () => {
       onConfirm: async () => {
         setConfirmConfig((prev) => ({ ...prev, loading: true }));
         try {
-          await api.delete(`/time-slots/date-specific/${date}`);
+          await deleteDateSlots(date);
           toast.success("✅ Custom slots removed");
-          fetchAllDateSlots();
-
-          if (selectedDate && fmt(selectedDate) === date) {
-            setCustomSlots([...defaultSlots]);
-          }
           closeConfirm();
         } catch (error) {
           toast.error("Failed to remove custom slots");
@@ -216,16 +91,13 @@ const AdminTimeSlots = () => {
     });
   };
 
-  const handleLoadDefaultTemplate = () => {
-    setCustomSlots([...defaultSlots]);
-    toast.info("Default slots loaded as template");
-  };
-
   return (
     <div className="p-6 space-y-8 max-w-6xl mx-auto">
       <ToastContainer position="top-center" />
 
-      <h1 className="text-3xl font-bold text-pink-600">Time Slots Management</h1>
+      <h1 className="text-3xl font-bold text-pink-600">
+        Time Slots Management
+      </h1>
 
       {/* DEFAULT SLOTS SECTION */}
       <div className="bg-white rounded-xl shadow-md p-6">
@@ -241,12 +113,12 @@ const AdminTimeSlots = () => {
             type="text"
             value={newDefaultSlot}
             onChange={(e) => setNewDefaultSlot(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleAddDefaultSlot()}
+            onKeyPress={(e) => e.key === "Enter" && addDefaultSlot()}
             placeholder="e.g., 7AM to 8AM"
             className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
           />
           <button
-            onClick={handleAddDefaultSlot}
+            onClick={addDefaultSlot}
             className="px-6 py-2.5 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition font-medium"
           >
             Add Slot
@@ -255,7 +127,9 @@ const AdminTimeSlots = () => {
 
         <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
           {defaultSlots.length === 0 ? (
-            <p className="text-center text-gray-500 py-4">No default slots configured</p>
+            <p className="text-center text-gray-500 py-4">
+              No default slots configured
+            </p>
           ) : (
             defaultSlots.map((slot, index) => (
               <div
@@ -264,7 +138,7 @@ const AdminTimeSlots = () => {
               >
                 <span className="font-medium text-gray-700">{slot}</span>
                 <button
-                  onClick={() => handleRemoveDefaultSlot(index)}
+                  onClick={() => removeDefaultSlot(index)}
                   className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm transition"
                 >
                   Remove
@@ -276,7 +150,7 @@ const AdminTimeSlots = () => {
 
         <div className="flex gap-3">
           <button
-            onClick={handleSaveDefaultSlots}
+            onClick={saveDefaultSlots}
             disabled={loadingDefault || defaultSlots.length === 0}
             className="px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
           >
@@ -323,7 +197,7 @@ const AdminTimeSlots = () => {
                 <strong>Editing slots for:</strong> {fmt(selectedDate)}
               </p>
               <button
-                onClick={handleLoadDefaultTemplate}
+                onClick={loadDefaultTemplate}
                 className="mt-2 text-xs text-blue-600 hover:underline font-medium"
               >
                 📋 Load default slots as template
@@ -335,12 +209,12 @@ const AdminTimeSlots = () => {
                 type="text"
                 value={newCustomSlot}
                 onChange={(e) => setNewCustomSlot(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleAddCustomSlot()}
+                onKeyPress={(e) => e.key === "Enter" && addCustomSlot()}
                 placeholder="e.g., 9AM to 10AM"
                 className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               />
               <button
-                onClick={handleAddCustomSlot}
+                onClick={addCustomSlot}
                 className="px-6 py-2.5 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition font-medium"
               >
                 Add Slot
@@ -349,7 +223,9 @@ const AdminTimeSlots = () => {
 
             <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
               {customSlots.length === 0 ? (
-                <p className="text-center text-gray-500 py-4">No slots added yet</p>
+                <p className="text-center text-gray-500 py-4">
+                  No slots added yet
+                </p>
               ) : (
                 customSlots.map((slot, index) => (
                   <div
@@ -358,7 +234,7 @@ const AdminTimeSlots = () => {
                   >
                     <span className="font-medium text-gray-700">{slot}</span>
                     <button
-                      onClick={() => handleRemoveCustomSlot(index)}
+                      onClick={() => removeCustomSlot(index)}
                       className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm transition"
                     >
                       Remove
@@ -369,11 +245,13 @@ const AdminTimeSlots = () => {
             </div>
 
             <button
-              onClick={handleSaveCustomSlots}
+              onClick={saveCustomSlots}
               disabled={loadingCustom || customSlots.length === 0}
               className="px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
             >
-              {loadingCustom ? "Saving..." : `Save Slots for ${fmt(selectedDate)}`}
+              {loadingCustom
+                ? "Saving..."
+                : `Save Slots for ${fmt(selectedDate)}`}
             </button>
           </>
         )}

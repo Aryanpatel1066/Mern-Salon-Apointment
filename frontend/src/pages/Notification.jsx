@@ -1,58 +1,29 @@
- import React, { useEffect, useState } from "react";
-import api from "../api/api";
-import axios from "axios";
-import Navbar from "../components/Navbar";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import useNotifications from "../hooks/useNotifications";
+import useAuth from "../hooks/useAuth";
+
 const Notification = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { user, loading: authLoading } = useAuth();
+  const {
+    notifications,
+    loading,
+    error,
+    unreadCount,
+    markAllAsRead,
+  } = useNotifications();
+
   const navigate = useNavigate();
-    const token = localStorage.getItem("token");
 
-  // Fetch notifications
-  const fetchNotifications = async () => {
-    try {
-      const res = await api.get("/notifications", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      setNotifications(res.data);
-      const unread = res.data.filter(n => !n.read).length;
-      setUnreadCount(unread);
-     } catch (err) {
-      setError("Failed to load notifications");
-     }
-    finally {
-      setLoading(false);
-    }
-  };
-
-  // Mark all as read
-  const markAllAsRead = async () => {
-    try {
-      await api.patch("/notifications/mark-read", {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      fetchNotifications(); // Refresh list
-    } catch (err) {
-      console.error("Failed to mark as read");
-    }
-  };
-
+  // redirect safely
   useEffect(() => {
-      if (!token) {
+    if (!authLoading && !user) {
       navigate("/login");
-      return;
     }
-    fetchNotifications();
-  }, []);
+  }, [authLoading, user, navigate]);
 
-   if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
@@ -60,45 +31,60 @@ const Notification = () => {
     );
   }
 
-  if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
+  if (error) {
+    return <p className="text-center mt-10 text-red-500">{error}</p>;
+  }
+
+  if (!user) return null;
+
   return (
-    <div>
-        <Navbar/>
-    <div className="p-4 max-w-lg mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Notifications</h2>
-        {unreadCount > 0 && (
-          <button
-            onClick={markAllAsRead}
-            className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600 transition-all"
-          >
-            Mark all as read ({unreadCount})
-          </button>
-        )}
-      </div>
-      <ul className="space-y-3">
-        {notifications.length === 0 ? (
-          <p>No notifications yet.</p>
-        ) : (
-          notifications.map(n => (
-            <li
-              key={n._id}
-              className={`p-3 border rounded-md ${
-                !n.read ? "bg-yellow-50 border-yellow-400" : "bg-yellow-50"
-              }`}
+    <>
+      <Navbar />
+      <div className="p-4 max-w-lg mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Notifications</h2>
+
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600 transition"
             >
-              <p className={`${n.message.toLowerCase().includes("cancelled") ? "text-red-600 font-semibold" : "text-green-800 font-semibold"}`}>
-                {n.message}
-              </p>
-              <small className="text-gray-500 block mt-1">
-                {new Date(n.createdAt).toLocaleString()}
-              </small>
-            </li>
-          ))
-        )}
-      </ul>
-    </div>
-    </div>
+              Mark all as read ({unreadCount})
+            </button>
+          )}
+        </div>
+
+        <ul className="space-y-3">
+          {notifications.length === 0 ? (
+            <p>No notifications yet.</p>
+          ) : (
+            notifications.map((n) => (
+              <li
+                key={n._id}
+                className={`p-3 border rounded-md ${
+                  !n.read
+                    ? "bg-yellow-50 border-yellow-400"
+                    : "bg-gray-50"
+                }`}
+              >
+                <p
+                  className={`font-semibold ${
+                    n.message.toLowerCase().includes("cancelled")
+                      ? "text-red-600"
+                      : "text-green-800"
+                  }`}
+                >
+                  {n.message}
+                </p>
+                <small className="text-gray-500 block mt-1">
+                  {new Date(n.createdAt).toLocaleString()}
+                </small>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+    </>
   );
 };
 
