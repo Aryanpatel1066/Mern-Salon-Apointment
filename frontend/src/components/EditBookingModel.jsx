@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import useClosedDays from "../hooks/useClosedDays";
 import useTimeSlots from "../hooks/useTimeSlots";
 import useSlotLock from "../hooks/useSlotLock";
-import useServices from "../hooks/useServices";
+import useAvailableServices from "../hooks/useAvailableServices";
 import { formatDate } from "../utils/dateUtils";
 import { useNavigate } from "react-router-dom";
 
@@ -24,9 +24,7 @@ const EditBookingModal = ({ booking, onClose, onSuccess }) => {
 
   const { allowDate } = useClosedDays();
 
-  const { services: availableServices, loading } = useServices({
-    onlyAvailable: true,
-  });
+const { services: availableServices, loading } = useAvailableServices();
 
   const { timeSlots, isBooked, isLocked } = useTimeSlots({
     date,
@@ -43,7 +41,6 @@ const EditBookingModal = ({ booking, onClose, onSuccess }) => {
 
   const handleServiceChange = (e) => {
     setSelectedService(e.target.value);
-    // DO NOT clear slot
   };
 
   const handleDateChange = (d) => {

@@ -3,16 +3,11 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import useNotifications from "../hooks/useNotifications";
 import useAuth from "../hooks/useAuth";
-
+import emptyNotification from "../assets/emptyNotification.png"
 const Notification = () => {
   const { user, loading: authLoading } = useAuth();
-  const {
-    notifications,
-    loading,
-    error,
-    unreadCount,
-    markAllAsRead,
-  } = useNotifications();
+  const { notifications, loading, error, unreadCount, markAllAsRead } =
+    useNotifications();
 
   const navigate = useNavigate();
 
@@ -56,15 +51,25 @@ const Notification = () => {
 
         <ul className="space-y-3">
           {notifications.length === 0 ? (
-            <p>No notifications yet.</p>
+            <div className="text-center p-10">
+              <img
+                src={emptyNotification}
+                alt="No Notifications"
+                className="mx-auto w-40 h-40"
+              />
+              <h2 className="text-xl font-bold mt-4 text-gray-700">
+                You have 0 notifications
+              </h2>
+              <p className="text-gray-500 mt-2">
+                Check back later for alerts and updates!
+              </p>
+            </div>
           ) : (
             notifications.map((n) => (
               <li
                 key={n._id}
                 className={`p-3 border rounded-md ${
-                  !n.read
-                    ? "bg-yellow-50 border-yellow-400"
-                    : "bg-gray-50"
+                  !n.read ? "bg-yellow-50 border-yellow-400" : "bg-gray-50"
                 }`}
               >
                 <p

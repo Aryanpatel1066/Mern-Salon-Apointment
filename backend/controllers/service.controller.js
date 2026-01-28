@@ -126,9 +126,30 @@ const deleteService = async (req, res) => {
     }
 };
 
+// ✅ Get only available services
+const getAvailableServices = async (req, res) => {
+  try {
+    const services = await Service.find({ available: true }).sort({ name: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: services.length,
+      services,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching available services:", error);
+    res.status(500).json({
+      message: "Error fetching available services",
+      error: error.message,
+    });
+  }
+};
+
+
 module.exports = {
     createService,
     getAllServices,
     updateService,
     deleteService,
+    getAvailableServices
 };
