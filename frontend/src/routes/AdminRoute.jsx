@@ -1,27 +1,46 @@
-import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
+import React, { useContext } from "react";
+import { Navigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
-const AdminRoute = () => {
-  const { user, token, loading } = useAuth();
+// Protected Route wrapper for admin routes
+export const AdminRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
 
-  // ⏳ wait until auth check finishes
   if (loading) {
-    return null; // or loader
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
   }
 
-  // ❌ not logged in
-  if (!token || !user) {
-    return <Navigate to="/404" replace />;
+  // Check if user is logged in and is an admin
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
-  // ❌ logged in but not admin
   if (user.role !== "admin") {
-    return <Navigate to="/404" replace />;
+    return <Navigate to="/" replace />;
   }
 
-  // ✅ admin allowed
-  return <Outlet />;
+  return children;
 };
 
-export default AdminRoute;
+// Protected Route wrapper for authenticated users
+export const PrivateRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
