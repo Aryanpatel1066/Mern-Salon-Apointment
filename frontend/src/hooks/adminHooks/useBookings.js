@@ -2,15 +2,33 @@ import { useEffect, useState } from "react";
 import api from "../../api/api";
 import { toast } from "react-toastify";
 
+const LIMIT = 5;
+
 const useBookings = () => {
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (loadMore = false) => {
     try {
       setLoading(true);
-      const { data } = await api.get("/booking");
-      setBookings(data);
+
+      const { data } = await api.get("/booking/admin", {
+        params: {
+          limit: LIMIT,
+          cursor: loadMore ? cursor : null,
+        },
+      });
+
+      if (loadMore) {
+        setBookings((prev) => [...prev, ...data.data]);
+      } else {
+        setBookings(data.data);
+      }
+
+      setCursor(data.nextCursor);
+      setHasMore(data.hasMore);
     } catch (error) {
       toast.error("Failed to load bookings");
       console.error(error);
@@ -23,7 +41,6 @@ const useBookings = () => {
     try {
       await api.patch(`/booking/${id}/status`, { status });
 
-      // 🔥 Optimistic update (NO refetch)
       setBookings((prev) =>
         prev.map((b) =>
           b._id === id ? { ...b, status } : b
@@ -31,7 +48,7 @@ const useBookings = () => {
       );
 
       toast.success("Booking status updated");
-    } catch (error) {
+    } catch {
       toast.error("Failed to update status");
     }
   };
@@ -45,21 +62,22 @@ const useBookings = () => {
       );
 
       toast.success("Booking deleted");
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete booking");
     }
   };
 
   useEffect(() => {
-    fetchBookings();
+    fetchBookings(false); // first page
   }, []);
 
   return {
     bookings,
     loading,
+    hasMore,
+    loadMore: () => fetchBookings(true),
     updateStatus,
     deleteBooking,
-    refetch: fetchBookings,
   };
 };
 

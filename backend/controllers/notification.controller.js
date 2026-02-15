@@ -3,12 +3,44 @@ const Notification = require("../models/Notification.model");
 // GET /api/notifications (User-specific)
 exports.getNotificationsForUser = async (req, res) => {
   try {
-    const notifications = await Notification.find({ user: req.user.id }).sort({ createdAt: -1 });
-    res.status(200).json(notifications);
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit) || 10;
+    const cursor = req.query.cursor;
+
+    let query = { user: userId };
+
+    // 🧠 Cursor condition
+    if (cursor) {
+      query._id = { $lt: cursor };
+    }
+
+    // 🔥 Fetch one extra to detect hasMore
+    const notifications = await Notification.find(query)
+      .sort({ _id: -1 })
+      .limit(limit + 1);
+
+    let hasMore = false;
+    let nextCursor = null;
+
+    if (notifications.length > limit) {
+      hasMore = true;
+      notifications.pop(); // remove extra
+      nextCursor = notifications[notifications.length - 1]._id;
+    }
+
+    res.status(200).json({
+      data: notifications,
+      nextCursor,
+      hasMore,
+    });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch notifications", error: err.message });
+    console.error(err);
+    res.status(500).json({
+      message: "Failed to fetch notifications",
+    });
   }
 };
+
 
 // PATCH /api/notifications/mark-read
 exports.markAllAsRead = async (req, res) => {

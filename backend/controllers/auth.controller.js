@@ -71,18 +71,43 @@ const getUserProfile = async (req, res) => {
     }
 };
 
-//admin side list of user
+// admin side list of users (PAGINATED)
 const getAllUser = async (req, res) => {
-    try {
-        const user = await User.find().select("-password");
-        res.status(200).json(user)
+  try {
+    const limit = Number(req.query.limit) || 10;
+    const cursor = req.query.cursor;
+
+    let query = {};
+
+    if (cursor) {
+      query._id = { $lt: cursor };
     }
-    catch (err) {
-        res.status(500).json({
-            message: "something went wrong now load user data"
-        })
+
+    const users = await User.find(query)
+      .select("-password")
+      .sort({ _id: -1 })
+      .limit(limit + 1);
+
+    let hasMore = false;
+    let nextCursor = null;
+
+    if (users.length > limit) {
+      hasMore = true;
+      nextCursor = users[limit - 1]._id;
+      users.pop();
     }
-}
+
+    res.status(200).json({
+      data: users,
+      nextCursor,
+      hasMore
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to load users"
+    });
+  }
+};
 
 //admin side delete user
 const deleteUser = async (req, res) => {

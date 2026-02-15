@@ -18,7 +18,7 @@ router.patch("/:id", authMiddleware, bookingController.updateBooking);
 router.delete("/:id", authMiddleware, bookingController.deleteBooking);
 
 // Admin get all bookings
-router.get("/", authMiddleware, isAdmin, bookingController.getAllBookings);
+router.get("/admin", authMiddleware, isAdmin, bookingController.getAllBookings);
 
 // Add these NEW routes for analytics (put them BEFORE the generic routes)
 router.get("/analytics/trends", authMiddleware, isAdmin, bookingController.getBookingAnalytics);

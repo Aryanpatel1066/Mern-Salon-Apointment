@@ -10,9 +10,12 @@ import ConfirmDialog from "../components/ConfirmDailog";
 
 function MyBookings() {
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [openMenu, setOpenMenu] = useState(null); // Track which menu is open
-  const [editModal, setEditModal] = useState(null); // Track booking being edited
+  const [loading, setLoading] = useState(false);
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+
+  const [openMenu, setOpenMenu] = useState(null);
+  const [editModal, setEditModal] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({
     open: false,
     bookingId: null,
@@ -28,18 +31,31 @@ function MyBookings() {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
-  const loadBooking = async () => {
+  // 🔥 FETCH BOOKINGS (WITH PAGINATION)
+  const loadBookings = async (loadMore = false) => {
     try {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        console.error("User ID not found in localStorage");
-        return;
+      setLoading(true);
+
+      const res = await api.get(`/booking/user/${userId}`, {
+        params: {
+          limit: 6,
+          cursor: loadMore ? cursor : null,
+        },
+      });
+
+      const { data, nextCursor, hasMore } = res.data;
+
+      if (loadMore) {
+        setBookings((prev) => [...prev, ...data]);
+      } else {
+        setBookings(data);
       }
 
-      const res = await api.get(`/booking/user/${userId}`);
-      setBookings(res.data);
-    } catch (err) {
-      console.error("Error fetching bookings:", err);
+      setCursor(nextCursor);
+      setHasMore(hasMore);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      toast.error("Failed to load bookings");
     } finally {
       setLoading(false);
     }
@@ -50,13 +66,8 @@ function MyBookings() {
       navigate("/login");
       return;
     }
-    loadBooking();
 
-    const interval = setInterval(() => {
-      loadBooking();
-    }, 5000);
-
-    return () => clearInterval(interval);
+    loadBookings(false);
   }, [userId]);
 
   const getStatusStyles = (status) => {
@@ -77,27 +88,28 @@ function MyBookings() {
   const handleDeleteRequest = (bookingId) => {
     setConfirmDelete({ open: true, bookingId });
   };
+
   const handleEditRequest = (booking) => {
-    setConfirmEdit({
-      open: true,
-      booking,
-    });
+    setConfirmEdit({ open: true, booking });
     setOpenMenu(null);
   };
+
   const handleEditConfirm = () => {
     setEditModal(confirmEdit.booking);
     setConfirmEdit({ open: false, booking: null });
   };
+
   const handleDeleteConfirm = async () => {
     try {
       setDeleting(true);
       await api.delete(`/booking/${confirmDelete.bookingId}`);
-      toast.success("✅ Booking cancelled successfully");
-      loadBooking();
-    } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "❌ Failed to cancel booking",
-      );
+      toast.success("✅ Booking cancelled");
+
+      // reload first page
+      setCursor(null);
+      loadBookings(false);
+    } catch (error) {
+      toast.error("❌ Failed to cancel booking");
     } finally {
       setDeleting(false);
       setConfirmDelete({ open: false, bookingId: null });
@@ -114,68 +126,52 @@ function MyBookings() {
           My Bookings
         </h1>
 
-        {loading ? (
-          <p className="text-center text-gray-500">Loading...</p>
-        ) : bookings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <img
-              src={emptyBooking}
-              alt="No bookings"
-              className="w-64 mb-6 opacity-80"
-            />
+        {bookings.length === 0 && !loading ? (
+          <div className="flex flex-col items-center py-20">
+            <img src={emptyBooking} alt="No bookings" className="w-64 mb-6" />
             <p className="text-gray-500 text-lg">No bookings yet</p>
-            <p className="text-gray-400 text-sm">
-              Book a service to see it here ✂️
-            </p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {bookings.map((booking) => (
-              <div
-                key={booking._id}
-                className="bg-white p-5 rounded-xl shadow hover:shadow-md transition border-l-4 border-pink-400 relative"
-              >
-                {/* 3-Dot Menu - Only for PENDING bookings */}
-                {booking.status === "pending" && (
-                  <div className="absolute top-3 right-3">
-                    <button
-                      onClick={() =>
-                        setOpenMenu(
-                          openMenu === booking._id ? null : booking._id,
-                        )
-                      }
-                      className="text-gray-600 hover:text-gray-800 p-1"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {bookings.map((booking) => (
+                <div
+                  key={booking._id}
+                  className="bg-white p-5 rounded-xl shadow border-l-4 border-pink-400 relative"
+                >
+                  {/* 3 DOT MENU */}
+                  {booking.status === "pending" && (
+                    <div className="absolute top-3 right-3">
+                      <button
+                        onClick={() =>
+                          setOpenMenu(
+                            openMenu === booking._id ? null : booking._id
+                          )
+                        }
+                        className="text-gray-600"
                       >
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
+                        ⋮
+                      </button>
 
-                    {/* Dropdown Menu */}
-                    {openMenu === booking._id && (
-                      <div className="absolute right-0 mt-1 w-32 bg-white rounded-lg shadow-lg border z-10">
-                        <button
-                          onClick={() => handleEditRequest(booking)}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRequest(booking._id)}
-                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
-                        >
-                          🗑️ Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      {openMenu === booking._id && (
+                        <div className="absolute right-0 mt-1 w-32 bg-white border rounded shadow z-10">
+                          <button
+                            onClick={() => handleEditRequest(booking)}
+                            className="block w-full px-4 py-2 text-sm hover:bg-gray-100"
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRequest(booking._id)}
+                            className="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            🗑️ Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                <div className="space-y-2">
                   <p className="text-sm text-gray-500">
                     📅{" "}
                     {new Date(booking.date).toLocaleDateString(undefined, {
@@ -184,51 +180,70 @@ function MyBookings() {
                       day: "numeric",
                     })}
                   </p>
-                  <p className="text-sm text-gray-600">⏰ {booking.timeSlot}</p>
-                  <p className="text-lg font-semibold text-gray-800">
-                    {booking.service?.name || "Service not available"}
+                  <p className="text-sm text-gray-600">
+                    ⏰ {booking.timeSlot}
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {booking.service?.name}
                   </p>
                   <span
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getStatusStyles(
-                      booking.status,
+                    className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${getStatusStyles(
+                      booking.status
                     )}`}
                   >
                     {booking.status}
                   </span>
                 </div>
+              ))}
+            </div>
+
+            {/* LOAD MORE BUTTON */}
+            {hasMore && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => loadBookings(true)}
+                  disabled={loading}
+                  className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700"
+                >
+                  {loading ? "Loading..." : "Load More"}
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
+
       <ConfirmDialog
         open={confirmDelete.open}
         title="Cancel Booking"
-        message="Are you sure you want to cancel this booking? This action cannot be undone."
+        message="Are you sure you want to cancel this booking?"
         confirmText="Yes, Cancel"
-        cancelText="No, Keep"
+        cancelText="No"
         loading={deleting}
         onCancel={() =>
           !deleting && setConfirmDelete({ open: false, bookingId: null })
         }
         onConfirm={handleDeleteConfirm}
       />
+
       <ConfirmDialog
         open={confirmEdit.open}
         title="Edit Booking"
         message="Do you want to edit this booking?"
-        confirmText="Yes, Edit"
-        cancelText="Cancel"
+        confirmText="Yes"
+        cancelText="No"
         onCancel={() => setConfirmEdit({ open: false, booking: null })}
         onConfirm={handleEditConfirm}
       />
 
-      {/* Edit Modal - Next Step */}
       {editModal && (
         <EditBookingModal
           booking={editModal}
           onClose={() => setEditModal(null)}
-          onSuccess={loadBooking}
+          onSuccess={() => {
+            setCursor(null);
+            loadBookings(false);
+          }}
         />
       )}
     </div>

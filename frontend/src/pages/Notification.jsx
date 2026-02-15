@@ -3,20 +3,27 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import useNotifications from "../hooks/useNotifications";
 import useAuth from "../hooks/useAuth";
-import emptyNotification from "../assets/emptyNotification.png"
+import emptyNotification from "../assets/emptyNotification.png";
+
 const Notification = () => {
   const { user, loading: authLoading } = useAuth();
-  const { notifications, loading, error, unreadCount, markAllAsRead } =
-    useNotifications();
+  const {
+    notifications,
+    loading,
+    error,
+    unreadCount,
+    hasMore,
+    fetchNotifications,
+    markAllAsRead,
+  } = useNotifications();
 
   const navigate = useNavigate();
 
-  // redirect safely
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
     }
-  }, [authLoading, user, navigate]);
+  }, [authLoading, user]);
 
   if (loading || authLoading) {
     return (
@@ -42,52 +49,59 @@ const Notification = () => {
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600 transition"
+              className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600"
             >
               Mark all as read ({unreadCount})
             </button>
           )}
         </div>
 
-        <ul className="space-y-3">
-          {notifications.length === 0 ? (
-            <div className="text-center p-10">
-              <img
-                src={emptyNotification}
-                alt="No Notifications"
-                className="mx-auto w-40 h-40"
-              />
-              <h2 className="text-xl font-bold mt-4 text-gray-700">
-                You have 0 notifications
-              </h2>
-              <p className="text-gray-500 mt-2">
-                Check back later for alerts and updates!
-              </p>
-            </div>
-          ) : (
-            notifications.map((n) => (
-              <li
-                key={n._id}
-                className={`p-3 border rounded-md ${
-                  !n.read ? "bg-yellow-50 border-yellow-400" : "bg-gray-50"
-                }`}
-              >
-                <p
-                  className={`font-semibold ${
-                    n.message.toLowerCase().includes("cancelled")
-                      ? "text-red-600"
-                      : "text-green-800"
+        {notifications.length === 0 ? (
+          <div className="text-center p-10">
+            <img
+              src={emptyNotification}
+              alt="No Notifications"
+              className="mx-auto w-40 h-40"
+            />
+            <h2 className="text-xl font-bold mt-4 text-gray-700">
+              You have 0 notifications
+            </h2>
+            <p className="text-gray-500 mt-2">
+              Check back later for alerts and updates!
+            </p>
+          </div>
+        ) : (
+          <>
+            <ul className="space-y-3">
+              {notifications.map((n) => (
+                <li
+                  key={n._id}
+                  className={`p-3 border rounded-md ${
+                    !n.read
+                      ? "bg-yellow-50 border-yellow-400"
+                      : "bg-gray-50"
                   }`}
                 >
-                  {n.message}
-                </p>
-                <small className="text-gray-500 block mt-1">
-                  {new Date(n.createdAt).toLocaleString()}
-                </small>
-              </li>
-            ))
-          )}
-        </ul>
+                  <p className="font-semibold">{n.message}</p>
+                  <small className="text-gray-500 block mt-1">
+                    {new Date(n.createdAt).toLocaleString()}
+                  </small>
+                </li>
+              ))}
+            </ul>
+
+            {hasMore && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={() => fetchNotifications(true)}
+                  className="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600"
+                >
+                  Load more
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </>
   );

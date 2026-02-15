@@ -48,44 +48,101 @@ exports.createBooking = async (req, res) => {
   }
 };
 
-// Get all bookings (Admin only)
+ // Get all bookings (Admin only) with cursor pagination
 exports.getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find().populate("user service");
-    res.status(200).json(bookings);
+    let { limit = 10, cursor } = req.query;
+    limit = parseInt(limit);
+
+    const query = {};
+
+    // If cursor exists, load next page
+    if (cursor) {
+      query._id = { $lt: cursor }; 
+    }
+
+    // Fetch one extra record to check hasMore
+    const bookings = await Booking.find(query)
+      .sort({ _id: -1 }) // newest first
+      .limit(limit + 1)
+      .populate("user service");
+
+    const hasMore = bookings.length > limit;
+
+    if (hasMore) bookings.pop(); // remove extra
+
+    const nextCursor =
+      bookings.length > 0
+        ? bookings[bookings.length - 1]._id
+        : null;
+
+    res.status(200).json({
+      data: bookings,
+      nextCursor,
+      hasMore,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching bookings", error });
+    res.status(500).json({
+      message: "Error fetching bookings",
+      error: error.message,
+    });
   }
 };
+
 
 // get all booking (user Id )
 exports.getBookingsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { limit = 6, cursor } = req.query;
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is missing" });
     }
 
-    const bookings = await Booking.find({ user: userId })
+    const query = { user: userId };
+
+    // cursor logic
+    if (cursor) {
+      query._id = { $lt: cursor };
+    }
+
+    const bookings = await Booking.find(query)
+      .sort({ _id: -1 }) // newest first
+      .limit(Number(limit) + 1)
       .populate("user service");
 
-     const sanitizedBookings = bookings.map(booking => {
+    let hasMore = false;
+
+    if (bookings.length > limit) {
+      hasMore = true;
+      bookings.pop(); // remove extra one
+    }
+
+    const sanitizedBookings = bookings.map((booking) => {
       const user = booking.user?.toObject();
       if (user) delete user.password;
 
       return {
         ...booking.toObject(),
-        user
+        user,
       };
     });
 
-    return res.status(200).json(sanitizedBookings);
+    const nextCursor =
+      bookings.length > 0 ? bookings[bookings.length - 1]._id : null;
+
+    res.status(200).json({
+      data: sanitizedBookings,
+      nextCursor,
+      hasMore,
+    });
   } catch (error) {
     console.error("Error fetching user bookings:", error);
-    return res.status(500).json({ message: "Error fetching bookings" });
+    res.status(500).json({ message: "Error fetching bookings" });
   }
 };
+
 
 // Update a booking (User can only update PENDING state)
 exports.updateBooking = async (req, res) => {
