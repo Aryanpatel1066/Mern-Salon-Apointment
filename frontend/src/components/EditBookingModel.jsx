@@ -16,15 +16,16 @@ const EditBookingModal = ({ booking, onClose, onSuccess }) => {
 
   const [date, setDate] = useState(new Date(booking.date));
   const [selectedService, setSelectedService] = useState(
-    typeof booking.service === "object" ? booking.service._id : booking.service,
+    typeof booking.service === "object"
+      ? booking.service._id
+      : booking.service,
   );
 
   const [dateChanged, setDateChanged] = useState(false);
   const [slotChanged, setSlotChanged] = useState(false);
 
   const { allowDate } = useClosedDays();
-
-const { services: availableServices, loading } = useAvailableServices();
+  const { services: availableServices, loading } = useAvailableServices();
 
   const { timeSlots, isBooked, isLocked } = useTimeSlots({
     date,
@@ -39,14 +40,10 @@ const { services: availableServices, loading } = useAvailableServices();
     serviceId: selectedService,
   });
 
-  const handleServiceChange = (e) => {
-    setSelectedService(e.target.value);
-  };
-
   const handleDateChange = (d) => {
     setDate(d);
     setDateChanged(true);
-    clearLock(); // force new slot
+    clearLock();
   };
 
   const handleSlotClick = (slot) => {
@@ -56,7 +53,7 @@ const { services: availableServices, loading } = useAvailableServices();
   };
 
   const handleUpdate = async () => {
-    const finalTimeSlot =
+    const finalSlot =
       dateChanged || slotChanged ? timeSlot : booking.timeSlot;
 
     if (!selectedService) {
@@ -64,7 +61,7 @@ const { services: availableServices, loading } = useAvailableServices();
       return;
     }
 
-    if (!finalTimeSlot) {
+    if (!finalSlot) {
       toast.error("❌ Please select a time slot");
       return;
     }
@@ -73,7 +70,7 @@ const { services: availableServices, loading } = useAvailableServices();
       await api.patch(`/booking/${booking._id}`, {
         service: selectedService,
         date: formatDate(date),
-        timeSlot: finalTimeSlot,
+        timeSlot: finalSlot,
       });
 
       clearLock();
@@ -81,19 +78,9 @@ const { services: availableServices, loading } = useAvailableServices();
       onSuccess();
       onClose();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to update booking");
+      toast.error(err?.response?.data?.message || "Update failed");
     }
   };
-
-  const availableTimeSlots = timeSlots.filter((slot) => {
-    if (
-      slot === booking.timeSlot &&
-      formatDate(date) === formatDate(new Date(booking.date))
-    ) {
-      return true;
-    }
-    return !isBooked(slot) && !isLocked(slot);
-  });
 
   const currentServiceName =
     typeof booking.service === "object"
@@ -105,7 +92,7 @@ const { services: availableServices, loading } = useAvailableServices();
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-40">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -129,14 +116,15 @@ const { services: availableServices, loading } = useAvailableServices();
           </p>
           <p>
             <b>Current Date & Time:</b>{" "}
-            {new Date(booking.date).toLocaleDateString()} at {booking.timeSlot}
+            {new Date(booking.date).toLocaleDateString()} at{" "}
+            {booking.timeSlot}
           </p>
         </div>
 
         {/* Service */}
         <select
           value={selectedService}
-          onChange={handleServiceChange}
+          onChange={(e) => setSelectedService(e.target.value)}
           className="w-full p-2 mb-4 border rounded"
         >
           <option value="">-- Select Service --</option>
@@ -153,33 +141,75 @@ const { services: availableServices, loading } = useAvailableServices();
           onChange={handleDateChange}
           minDate={tomorrow}
           filterDate={allowDate}
-          className="w-full p-2 mb-4 border rounded"
+          dateFormat="dd MMM yyyy"
+          className="w-full p-3 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
         />
+
+         <div className="flex flex-wrap justify-center gap-3 text-xs mb-2">
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-white border rounded"></span> Available
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-pink-500 rounded"></span> Selected
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-yellow-300 rounded"></span> Locked
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-gray-300 rounded"></span> Booked
+          </span>
+        </div>
 
         {/* Slots */}
         <div className="grid grid-cols-2 gap-2 mb-4">
           {timeSlots.map((slot) => {
+            const booked = isBooked(slot);
+            const locked = isLocked(slot);
             const selected =
               slot ===
               (slotChanged || dateChanged ? timeSlot : booking.timeSlot);
 
             return (
-              <button
+              <div
                 key={slot}
-                disabled={isBooked(slot) || isLocked(slot)}
-                onClick={() => handleSlotClick(slot)}
-                className={`p-2 border rounded ${
-                  selected
-                    ? "bg-pink-500 text-white"
-                    : isBooked(slot)
-                      ? "bg-gray-400 text-white"
-                      : isLocked(slot)
-                        ? "bg-yellow-300"
-                        : "bg-green-100"
-                }`}
+                title={
+                  booked
+                    ? "This slot is already booked"
+                    : locked
+                    ? "Temporarily reserved by another user"
+                    : selected
+                    ? "Selected by you"
+                    : "Click to select this slot"
+                }
               >
-                {slot}
-              </button>
+                <button
+                  disabled={booked || locked}
+                  onClick={() => handleSlotClick(slot)}
+                  className={`relative w-full p-2 rounded-lg text-sm font-medium border transition-all
+                    ${
+                      booked
+                        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                        : locked
+                        ? "bg-yellow-300 text-gray-800 cursor-not-allowed"
+                        : selected
+                        ? "bg-pink-500 text-white border-pink-500"
+                        : "bg-white hover:bg-pink-100 border-gray-300"
+                    }
+                  `}
+                >
+                  {slot}
+
+                  {booked && (
+                    <span className="absolute top-1 right-1 text-xs">🔒</span>
+                  )}
+                  {locked && !booked && (
+                    <span className="absolute top-1 right-1 text-xs">⏳</span>
+                  )}
+                  {selected && (
+                    <span className="absolute top-1 right-1 text-xs">✔</span>
+                  )}
+                </button>
+              </div>
             );
           })}
         </div>
@@ -187,7 +217,8 @@ const { services: availableServices, loading } = useAvailableServices();
         {/* Timer */}
         {timer > 0 && (
           <p className="text-center text-red-500 text-sm mb-3">
-            ⏳ Time left: {Math.floor(timer / 60)}:
+            ⏳ This slot is reserved for you for{" "}
+            {Math.floor(timer / 60)}:
             {String(timer % 60).padStart(2, "0")}
           </p>
         )}
@@ -199,7 +230,7 @@ const { services: availableServices, loading } = useAvailableServices();
           </button>
           <button
             onClick={handleUpdate}
-            className="flex-1 bg-pink-500 text-white py-2 rounded"
+            className="flex-1 bg-pink-500 text-white py-2 rounded hover:bg-pink-600"
           >
             Update Booking
           </button>
