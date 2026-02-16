@@ -11,42 +11,79 @@ const STATIC_LOCATION = "382860 city:vijapur house number 123";
 let notificationMessage = "";
 
 //creat bookin (user)
+ 
 exports.createBooking = async (req, res) => {
   try {
+    const userId = req.user.id;
     const { service, date, timeSlot } = req.body;
-    const user = req.user.id;
 
-    // ✅ Must have lock
-    const lock = await SlotLock.findOne({ user, date, timeSlot });
+    const DAILY_LIMIT = 5;
+
+    // 🕛 Today range
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    // 🔢 Count today's bookings
+    const todayCount = await Booking.countDocuments({
+      user: userId,
+      createdAt: { $gte: start, $lte: end }
+    });
+
+    if (todayCount >= DAILY_LIMIT) {
+      return res.status(429).json({
+        message: "Daily booking limit reached (5). Try again tomorrow."
+      });
+    }
+
+    // ✅ Slot lock check (if you use it)
+    const lock = await SlotLock.findOne({ user: userId, date, timeSlot });
     if (!lock) {
       return res.status(403).json({ message: "Slot not locked or expired" });
     }
-    const existingService = await Service.findById(service);
-    if (!existingService) {
-      return res.status(404).json({ message: "Service not found" });
-    }
 
-    // ❗Check for time conflict
-    const existingBooking = await Booking.findOne({ date, timeSlot });
-    if (existingBooking) {
-      return res.status(409).json({ message: "Selected time slot is already booked" });
-    }
+    const booking = await Booking.create({
+      user: userId,
+      service,
+      date,
+      timeSlot
+    });
 
-    const booking = new Booking({ user, service, date, timeSlot });
-    await booking.save();
-
-    const populatedBooking = await Booking.findById(booking._id)
-      .populate('user', 'name email')
-      .populate('service', 'name description');
-
-    // 🔓 Remove lock
     await SlotLock.deleteOne({ _id: lock._id });
 
-    res.status(201).json(populatedBooking);
+    res.status(201).json({ message: "Booking confirmed", booking });
   } catch (error) {
-    res.status(500).json({ message: "Error creating booking", error: error.message });
+    res.status(500).json({ message: "Booking failed" });
   }
 };
+
+exports.getBookingStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const DAILY_LIMIT = 5;
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const count = await Booking.countDocuments({
+      user: userId,
+      createdAt: { $gte: start, $lte: end }
+    });
+
+    res.json({
+      canBook: count < DAILY_LIMIT,
+      remaining: Math.max(0, DAILY_LIMIT - count)
+    });
+  } catch {
+    res.status(500).json({ message: "Failed to check booking status" });
+  }
+};
+
 
  // Get all bookings (Admin only) with cursor pagination
 exports.getAllBookings = async (req, res) => {
@@ -341,18 +378,23 @@ exports.deleteBooking = async (req, res) => {
 exports.getBookedSlots = async (req, res) => {
   const { date } = req.query;
   const userId = req.user?.id;
-  const bookings = await Booking.find({ date }).select("timeSlot");
-  const locks = await SlotLock.find({ date, user: { $ne: userId } }).select("timeSlot");
+
+  // ✅ Only count non-cancelled bookings as "booked"
+  const bookings = await Booking.find({ 
+    date, 
+    status: { $ne: "cancelled" }  // 👈 ADD THIS LINE
+  }).select("timeSlot");
+
+  const locks = await SlotLock.find({ 
+    date, 
+    user: { $ne: userId } 
+  }).select("timeSlot");
 
   const bookedSlots = bookings.map(b => b.timeSlot);
   const lockedSlots = locks.map(l => l.timeSlot);
 
-  res.json({
-    bookedSlots,
-    lockedSlots,
-  });
+  res.json({ bookedSlots, lockedSlots });
 };
-
 // Get booking analytics for admin dashboard
 exports.getBookingAnalytics = async (req, res) => {
   try {

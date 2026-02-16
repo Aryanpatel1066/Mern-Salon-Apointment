@@ -1,14 +1,49 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../api/api";
+import { toast } from "react-toastify";
 
 const ServiceCard = ({ service }) => {
   const navigate = useNavigate();
 
+  const [canBook, setCanBook] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ CHECK DAILY BOOKING LIMIT
+useEffect(() => {
+  const fetchBookingStatus = async () => {
+    try {
+      const res = await api.get("/booking/status");
+      setCanBook(res.data.canBook);
+    } catch (error) {
+      // fallback: allow booking if API fails
+      setCanBook(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchBookingStatus();
+}, []);
+
+
+  // ✅ DEFINE IT HERE (IMPORTANT)
+  const isDisabled = !service.available || !canBook || loading;
+
   const handleBookNow = () => {
-    // ✅ STORE DATA
+    if (!service.available) {
+      toast.error("This service is unavailable");
+      return;
+    }
+
+    if (!canBook) {
+      toast.error("You reached today's booking limit");
+      return;
+    }
+
     localStorage.setItem("selectedServiceId", service._id);
     localStorage.setItem("selectedServicePrice", service.price);
 
-    // ✅ NAVIGATE AFTER STORE
     navigate("/booking");
   };
 
@@ -28,15 +63,21 @@ const ServiceCard = ({ service }) => {
       </div>
 
       <button
-        disabled={!service.available}
+        disabled={isDisabled}
         onClick={handleBookNow}
         className={`mt-4 w-full py-2 rounded-lg ${
-          service.available
-            ? "bg-pink-500 text-white hover:bg-pink-600"
-            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          isDisabled
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-pink-500 text-white hover:bg-pink-600"
         }`}
       >
-        {service.available ? "Book Now" : "Unavailable"}
+        {loading
+          ? "Checking..."
+          : !service.available
+          ? "Unavailable"
+          : !canBook
+          ? "Daily limit reached"
+          : "Book Now"}
       </button>
     </div>
   );

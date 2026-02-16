@@ -9,18 +9,27 @@ function ForgotPassword() {
   const navigate = useNavigate();
   const { sendOtp, loading } = useOtp();
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    const ok = await sendOtp(email);
+    try {
+      const ok = await sendOtp(email);
 
-    if (!ok) {
-      setError("User not found or failed to send OTP");
-      return;
+      if (!ok) {
+        setError("User not found or failed to send OTP");
+        return;
+      }
+
+      navigate("/verify-otp", { state: { email } });
+    } catch (err) {
+      // 🔥 HANDLE RATE LIMIT (429)
+      if (err?.response?.status === 429) {
+        setError("Too many OTP requests. Please try again after some time.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     }
-
-    navigate("/verify-otp", { state: { email } });
   };
 
   return (

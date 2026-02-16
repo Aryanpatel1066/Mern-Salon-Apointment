@@ -3,11 +3,13 @@ const router = express.Router();
 const bookingController = require("../controllers/booking.controller");
 const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 const Booking = require("../models/Booking.model");
-
+  
 router.get("/booked-slots", authMiddleware, bookingController.getBookedSlots);
  
 // User Routes
 router.post("/", authMiddleware, bookingController.createBooking);
+router.get("/status", authMiddleware, bookingController.getBookingStatus);
+
 router.get("/user/:userId", authMiddleware, bookingController.getBookingsByUser);
 
 //admin route 

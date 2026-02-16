@@ -14,15 +14,15 @@ const Login = () => {
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-
-    // clear error while typing
     setErrors({ ...errors, [e.target.name]: "" });
+    setServerError("");
   };
 
   const validateForm = () => {
@@ -60,9 +60,18 @@ const Login = () => {
       setTimeout(() => {
         navigate(res.data.user.role === "admin" ? "/admin" : "/");
       }, 1600);
-
     } catch (err) {
-      toast.error(err?.response?.data?.message || "❌ Login failed");
+      const status = err?.response?.status;
+      const message = err?.response?.data?.message;
+
+      if (status === 429) {
+        setServerError(message || "Too many attempts. Please try later.");
+        toast.error(`⏳ ${message}`, {
+          toastId: "rate-limit",
+        });
+      } else {
+        setServerError(message || "Login failed");
+      }
     }
   };
 
@@ -71,9 +80,12 @@ const Login = () => {
       <Navbar />
 
       <div className="max-w-md mx-auto mt-12 p-6 shadow-lg rounded-xl bg-white space-y-4">
-        <h2 className="text-2xl font-bold text-center text-pink-600">
-          Login
-        </h2>
+        {serverError && (
+          <p className="text-red-600 text-sm text-center font-medium">
+            {serverError}
+          </p>
+        )}
+        <h2 className="text-2xl font-bold text-center text-pink-600">Login</h2>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* Email */}

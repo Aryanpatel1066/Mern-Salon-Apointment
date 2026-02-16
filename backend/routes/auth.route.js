@@ -1,13 +1,17 @@
 const express = require("express");
 const { registerUser, loginUser, getUserProfile, getAllUser, deleteUser, updateUser } = require("../controllers/auth.controller");
 const { authMiddleware, verifySignupBody, verifySignInBody, isAdmin } = require("../middleware/authMiddleware"); // ✅ Fixed Import
-
+const rateLimiter = require("../middleware/rateLimiter");
 
 const router = express.Router();
 
 // Public Routes
 router.post("/register", verifySignupBody, registerUser);
-router.post("/login", verifySignInBody, loginUser);
+router.post("/login",rateLimiter({
+    keyPrefix: "login",
+    limit: 5,
+    windowMs: 60 * 1000 // 1 minute
+  }),  verifySignInBody, loginUser);
 
 router.get("/profile/:id", authMiddleware, getUserProfile);
 //admin side route

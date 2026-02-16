@@ -7,7 +7,7 @@ exports.lockSlot = async (req, res) => {
     const userId = req.user.id;
 
     // Already booked?
-    const booked = await Booking.findOne({ date, timeSlot });
+    const booked = await Booking.findOne({ date, timeSlot  ,status: { $ne: "cancelled" }  });
     if (booked) {
       return res.status(409).json({ message: "Slot already booked" });
     }
@@ -23,6 +23,7 @@ exports.lockSlot = async (req, res) => {
       date,
       timeSlot,
       expiresAt,
+      
     });
 
     res.status(200).json({
