@@ -1,6 +1,6 @@
 # 💇‍♀️ Salon Bliss – MERN Appointment Booking App
 
-**Salon Bliss** is a full-stack salon appointment booking application built using the **MERN stack** (MongoDB, Express.js, React, Node.js). It allows customers to register, log in, book services, and view their bookings, while admins can manage users, services, and appointments.
+**Salon Bliss** is a full-stack salon appointment booking application built using the **MERN stack** (MongoDB, Express.js, React, Node.js). It supports real-world booking logic such as slot locking, rate limiting, admin approval, analytics, and dynamic availability.
 
 ---
 
@@ -16,8 +16,13 @@
 ### 👩‍💼 Customer
 - Register and login securely
 - Browse and book available services
-- View and manage bookings
-- Forgot password option
+- Dynamic date & time slot booking
+- Slot locking system (prevents double booking)
+- Daily booking rate limit
+- View booking history (cursor pagination)
+- Edit/Delete pending bookings only
+- Forgot password with OTP verification
+- Email notifications on booking status updates
 
 ### 🛠️ Admin
 - Admin login with auto-created default admin
@@ -25,13 +30,17 @@
 - Add/update/delete services
 - View and manage bookings
 - Send notifications (email/SMS ready)
+- Release slot automatically on rejection
+- Booking analytics dashboard
+- Close salon on selected days (holidays / off days)
+- Manage regular/specific date time slots
 
 ---
 
 ## 🧰 Tech Stack
 
-- **Frontend**: React, Tailwind CSS, Axios, React Router, Toastify
-- **Backend**: Node.js, Express.js, Mongoose, JWT, Bcrypt, Nodemailer
+- **Frontend**: React, Tailwind CSS, Axios, React Router, Toastify, Recharts
+- **Backend**: Node.js, Express.js, Mongoose, JWT, Bcrypt, Nodemailer, Rate Limiter, Cursor-based pagination
 - **Database**: MongoDB Atlas
 - **Deployment**: Vercel (frontend), Render (backend)
 
