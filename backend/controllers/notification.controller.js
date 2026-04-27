@@ -9,12 +9,11 @@ exports.getNotificationsForUser = async (req, res) => {
 
     let query = { user: userId };
 
-    // 🧠 Cursor condition
     if (cursor) {
       query._id = { $lt: cursor };
     }
 
-    // 🔥 Fetch one extra to detect hasMore
+    // Fetch one extra to detect hasMore
     const notifications = await Notification.find(query)
       .sort({ _id: -1 })
       .limit(limit + 1);
@@ -24,7 +23,7 @@ exports.getNotificationsForUser = async (req, res) => {
 
     if (notifications.length > limit) {
       hasMore = true;
-      notifications.pop(); // remove extra
+      notifications.pop(); 
       nextCursor = notifications[notifications.length - 1]._id;
     }
 

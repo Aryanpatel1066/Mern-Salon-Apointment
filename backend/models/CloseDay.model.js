@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const ClosedDaySchema = new mongoose.Schema({
   date: {
-    type: String, // store as YYYY-MM-DD string for easy comparison
+    type: String, 
     required: true,
     unique: true,
   }

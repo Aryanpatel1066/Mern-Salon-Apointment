@@ -4,10 +4,16 @@ const User = require("../models/User.model");
 const Service = require("../models/Service.model");
 const Notification = require("../models/Notification.model");
 const SlotLock = require("../models/SlotLock.model");
-const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const nodemailer = require("nodemailer");
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-const STATIC_LOCATION = "382860 city:vijapur house number 123"; 
+const STATIC_LOCATION = "382860 city:vijapur house number 123";
 let notificationMessage = "";
 
 //creat bookin (user)
@@ -19,14 +25,14 @@ exports.createBooking = async (req, res) => {
 
     const DAILY_LIMIT = 5;
 
-    // 🕛 Today range
+    // Today range
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
     const end = new Date();
     end.setHours(23, 59, 59, 999);
 
-    // 🔢 Count today's bookings
+    //  Count today's bookings
     const todayCount = await Booking.countDocuments({
       user: userId,
       createdAt: { $gte: start, $lte: end }
@@ -38,7 +44,7 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    // ✅ Slot lock check (if you use it)
+    // Slot lock check (if you use it)
     const lock = await SlotLock.findOne({ user: userId, date, timeSlot });
     if (!lock) {
       return res.status(403).json({ message: "Slot not locked or expired" });
@@ -83,7 +89,6 @@ exports.getBookingStatus = async (req, res) => {
     res.status(500).json({ message: "Failed to check booking status" });
   }
 };
-
 
  // Get all bookings (Admin only) with cursor pagination
 exports.getAllBookings = async (req, res) => {
@@ -193,7 +198,7 @@ exports.updateBooking = async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // ✅ Only allow editing if status is "pending"
+    //  Only allow editing if status is "pending"
     if (booking.status !== "pending") {
       console.log("❌ Status check failed:", booking.status);
       return res.status(403).json({
@@ -201,7 +206,7 @@ exports.updateBooking = async (req, res) => {
       });
     }
 
-    // ✅ Users can only edit their own bookings (Convert both to strings for comparison)
+    //  Users can only edit their own bookings (Convert both to strings for comparison)
     //If the booking does NOT belong to this user AND the user is NOT an admin → block them
     if (booking.user.toString() !== userId.toString() && req.user.role !== "admin") {
       console.log("❌ Authorization failed");
@@ -210,7 +215,7 @@ exports.updateBooking = async (req, res) => {
       });
     }
 
-    // ✅ Format dates for comparison
+    //  Format dates for comparison
     const formatDate = (d) => {
       const date = new Date(d);
       return date.toISOString().split('T')[0];
@@ -298,12 +303,27 @@ exports.updateBookingStatus = async (req, res) => {
     if (booking.status === "confirmed") {
       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been confirmed.`;
       subject = "Your Booking is Confirmed!";
-      text = `Hi ${name || "User"},\n\nYour booking for "${serviceName}" has been confirmed.\n\n📅 Date: ${date}\n⏰ Time: ${time}\n📍 Location: ${STATIC_LOCATION}\n\n✅ Check your status in your profile.\n\nThank you for booking with us!\nSalonBlis App Team`;
-    } else if (booking.status === "cancelled") {
+ text = `Hi ${name || "User"},
+
+Your booking for "${serviceName}" has been confirmed.
+
+📅 Date: ${date}
+⏰ Time: ${time}
+📍 Location: ${STATIC_LOCATION}
+
+✅ Check your status in your profile.
+
+Thank you for booking with us!
+SalonBlis App Team`;    } else if (booking.status === "cancelled") {
       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.`;
       subject = "Your Booking Has Been Cancelled";
-      text = `Hi ${name || "User"},\n\nYour booking for "${serviceName}" on ${date} at ${time} has been cancelled.\n\nIf this was unexpected, please reach out to our support team.\n\nSalonBlis App Team`;
-    }
+ text = `Hi ${name || "User"},
+
+Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.
+
+If this was unexpected, please reach out to our support team.
+
+SalonBlis App Team`;    }
 
     // Save Notification
     if (notificationMessage) {
@@ -316,16 +336,16 @@ exports.updateBookingStatus = async (req, res) => {
     // Send email 
     if (subject && text) {
       const msg = {
+                from: `"SalonBlis" <${process.env.EMAIL_USER}>`,
         to: email,
-        from: "aryan.dev1066@gmail.com", // VERIFIED IN SENDGRID
         subject,
         text,
         html: `<p>${text.replace(/\n/g, "<br/>")}</p>`,
       };
 
-      sgMail.send(msg)
+      transporter.sendMail(msg)
         .then(() => console.log("Email sent successfully"))
-        .catch(err => console.error("SendGrid email error:", err.response?.body || err));
+        .catch(err => console.error("Nodemailer email error:", err));
     }
 
     res.status(200).json({ message: "Booking status updated", booking });
@@ -396,213 +416,3 @@ exports.getBookedSlots = async (req, res) => {
   res.json({ bookedSlots, lockedSlots });
 };
 // Get booking analytics for admin dashboard
-exports.getBookingAnalytics = async (req, res) => {
-  try {
-    const { period } = req.query; // daily, weekly, monthly, yearly
-
-    const now = new Date();
-    let startDate;
-    let groupBy;
-
-    // Determine date range and grouping
-    switch (period) {
-      case 'daily':
-        startDate = new Date(now.setDate(now.getDate() - 7)); // Last 7 days
-        groupBy = { $dateToString: { format: "%Y-%m-%d", date: "$date" } };
-        break;
-      case 'weekly':
-        startDate = new Date(now.setDate(now.getDate() - 28)); // Last 4 weeks
-        groupBy = { $week: "$date" };
-        break;
-      case 'monthly':
-        startDate = new Date(now.setMonth(now.getMonth() - 6)); // Last 6 months
-        groupBy = { $dateToString: { format: "%Y-%m", date: "$date" } };
-        break;
-      case 'yearly':
-        startDate = new Date(now.setFullYear(now.getFullYear() - 5)); // Last 5 years
-        groupBy = { $year: "$date" };
-        break;
-      default:
-        startDate = new Date(now.setMonth(now.getMonth() - 6));
-        groupBy = { $dateToString: { format: "%Y-%m", date: "$date" } };
-    }
-
-    const bookings = await Booking.aggregate([
-      {
-        $match: {
-          date: { $gte: startDate }
-        }
-      },
-      {
-        $lookup: {
-          from: 'services',
-          localField: 'service',
-          foreignField: '_id',
-          as: 'serviceDetails'
-        }
-      },
-      {
-        $unwind: '$serviceDetails'
-      },
-      {
-        $group: {
-          _id: groupBy,
-          bookings: { $sum: 1 },
-          revenue: { $sum: '$serviceDetails.price' }
-        }
-      },
-      {
-        $sort: { _id: 1 }
-      }
-    ]);
-
-    res.status(200).json(bookings);
-  } catch (error) {
-    console.error("Error fetching booking analytics:", error);
-    res.status(500).json({ message: "Error fetching analytics", error: error.message });
-  }
-};
-
-// Get popular services
-exports.getPopularServices = async (req, res) => {
-  try {
-    const services = await Booking.aggregate([
-      {
-        $group: {
-          _id: '$service',
-          bookings: { $sum: 1 }
-        }
-      },
-      {
-        $lookup: {
-          from: 'services',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'serviceDetails'
-        }
-      },
-      {
-        $unwind: '$serviceDetails'
-      },
-      {
-        $project: {
-          name: '$serviceDetails.name',
-          bookings: 1,
-          _id: 0
-        }
-      },
-      {
-        $sort: { bookings: -1 }
-      },
-      {
-        $limit: 6
-      }
-    ]);
-
-    res.status(200).json(services);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching popular services", error: error.message });
-  }
-};
-
-// Get booking status distribution
-exports.getStatusDistribution = async (req, res) => {
-  try {
-    const distribution = await Booking.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          value: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          name: {
-            $switch: {
-              branches: [
-                { case: { $eq: ['$_id', 'pending'] }, then: 'Pending' },
-                { case: { $eq: ['$_id', 'confirmed'] }, then: 'Confirmed' },
-                { case: { $eq: ['$_id', 'cancelled'] }, then: 'Cancelled' }
-              ],
-              default: 'Unknown'
-            }
-          },
-          value: 1,
-          _id: 0
-        }
-      }
-    ]);
-
-    res.status(200).json(distribution);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching status distribution", error: error.message });
-  }
-};
-
-// Get peak hours analysis
-exports.getPeakHours = async (req, res) => {
-  try {
-    const peakHours = await Booking.aggregate([
-      {
-        $group: {
-          _id: '$timeSlot',
-          bookings: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          time: '$_id',
-          bookings: 1,
-          _id: 0
-        }
-      },
-      {
-        $sort: { time: 1 }
-      }
-    ]);
-
-    res.status(200).json(peakHours);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching peak hours", error: error.message });
-  }
-};
-
-// Get dashboard summary (all stats at once)
-exports.getDashboardSummary = async (req, res) => {
-  try {
-    const totalUsers = await require('../models/User.model').countDocuments();
-    const totalServices = await require('../models/Service.model').countDocuments();
-    const totalBookings = await Booking.countDocuments();
-    // Calculate total revenue
-    const revenueData = await Booking.aggregate([
-      {
-        $lookup: {
-          from: 'services',
-          localField: 'service',
-          foreignField: '_id',
-          as: 'serviceDetails'
-        }
-      },
-      {
-        $unwind: '$serviceDetails'
-      },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: '$serviceDetails.price' }
-        }
-      }
-    ]);
-
-    const totalRevenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
-
-    res.status(200).json({
-      totalUsers,
-      totalServices,
-      totalBookings,
-      totalRevenue
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching dashboard summary", error: error.message });
-  }
-};

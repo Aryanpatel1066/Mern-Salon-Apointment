@@ -11,8 +11,8 @@ const app = express();
 
 app.use(
   cors({
-  //  origin: "http://localhost:5173",
-    origin: "https://mern-salon-apointment.vercel.app",
+    // origin: "http://localhost:5173",
+   origin: "https://mern-salon-apointment.vercel.app",
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -26,14 +26,9 @@ app.use(
 });
 
 /* ===== ROUTES ===== */
-app.use("/api/users", require("./routes/auth.route"));
-app.use("/api/services", require("./routes/service.route"));
-app.use("/api/booking", require("./routes/booking.route"));
-app.use("/api", require("./routes/slotLock.route")); 
-app.use("/api/closed-days", require("./routes/closeDays.route"));
-app.use("/api/email", require("./routes/email.route"));
-app.use("/api/notifications", require("./routes/notification.route"));
-app.use("/api", require("./routes/timeSloat.route"));
+// Routes
+app.use("/api", require("./routes"));
+
 
 /* ===== SERVER ===== */
 const PORT = process.env.PORT || 1066;

@@ -73,11 +73,11 @@ const useAdminDashboard = (timeFilter) => {
     setLoading(true);
     try {
       const [summary, trends, services, status, peak] = await Promise.all([
-        api.get("/booking/analytics/dashboard-summary"),
-        api.get(`/booking/analytics/trends?period=${timeFilter}`),
-        api.get("/booking/analytics/popular-services"),
-        api.get("/booking/analytics/status-distribution"),
-        api.get("/booking/analytics/peak-hours"),
+        api.get("/analytics/dashboard-summary"),
+        api.get(`/analytics/trends?period=${timeFilter}`),
+        api.get("/analytics/popular-services"),
+        api.get("/analytics/status-distribution"),
+        api.get("/analytics/peak-hours"),
       ]);
 
       setStats(summary.data);
