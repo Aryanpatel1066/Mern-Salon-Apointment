@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import useNotifications from "../hooks/useNotifications";
@@ -13,17 +13,26 @@ const Notification = () => {
     error,
     unreadCount,
     hasMore,
+    nextCursor,
     fetchNotifications,
     markAllAsRead,
   } = useNotifications();
 
   const navigate = useNavigate();
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
     }
-  }, [authLoading, user]);
+  }, [authLoading, user, navigate]);
+
+  useEffect(() => {
+    if (!authLoading && user && !fetchedRef.current) {
+      fetchedRef.current = true;
+      fetchNotifications(false);
+    }
+  }, [authLoading, user, fetchNotifications]);
 
   if (loading || authLoading) {
     return (
@@ -44,7 +53,6 @@ const Notification = () => {
       <Navbar />
       <div className="p-4 max-w-lg mx-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Notifications</h2>
 
           {unreadCount > 0 && (
             <button
@@ -77,9 +85,7 @@ const Notification = () => {
                 <li
                   key={n._id}
                   className={`p-3 border rounded-md ${
-                    !n.read
-                      ? "bg-yellow-50 border-yellow-400"
-                      : "bg-gray-50"
+                    !n.read ? "bg-yellow-50 border-yellow-400" : "bg-gray-50"
                   }`}
                 >
                   <p className="font-semibold">{n.message}</p>
@@ -90,10 +96,10 @@ const Notification = () => {
               ))}
             </ul>
 
-            {hasMore && (
+            {hasMore && nextCursor && (
               <div className="flex justify-center mt-6">
                 <button
-                  onClick={() => fetchNotifications(true)}
+                  onClick={() => fetchNotifications(true, nextCursor)}
                   className="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600"
                 >
                   Load more

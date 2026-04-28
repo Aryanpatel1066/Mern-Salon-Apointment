@@ -1,4 +1,3 @@
-// src/utils/dateUtils.js
 
 // Format date to YYYY-MM-DD (local time)
 export const formatDate = (date) => {
