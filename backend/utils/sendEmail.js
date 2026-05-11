@@ -37,7 +37,7 @@ const sendOtpMail = async (email, otp, name = "User") => {
 /* ----------------------------------
    SEND OTP
 ----------------------------------- */
-exports.sendOTP = async (req, res) => {
+const sendOTP = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -63,7 +63,7 @@ exports.sendOTP = async (req, res) => {
 /* ----------------------------------
    RESEND OTP (with cooldown)
 ----------------------------------- */
-exports.resendOTP = async (req, res) => {
+const resendOTP = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -96,7 +96,7 @@ exports.resendOTP = async (req, res) => {
 /* ----------------------------------
    VERIFY OTP
 ----------------------------------- */
-exports.verifyOTP = async (req, res) => {
+const verifyOTP = async (req, res) => {
   const { otp } = req.body;
 
   if (!otp)
@@ -124,7 +124,7 @@ exports.verifyOTP = async (req, res) => {
 /* ----------------------------------
    RESET PASSWORD
 ----------------------------------- */
-exports.resetPassword = async (req, res) => {
+const resetPassword = async (req, res) => {
   const { otp, newPassword } = req.body;
 
   if (!otp || !newPassword)
@@ -154,4 +154,12 @@ exports.resetPassword = async (req, res) => {
     console.error("Reset password error:", error);
     res.status(500).json({ message: "Password reset failed" });
   }
+};
+module.exports = {
+  transporter,
+  sendOtpMail,
+  sendOTP,
+  verifyOTP,
+  resetPassword,
+  resendOTP,
 };

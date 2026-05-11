@@ -5,6 +5,7 @@ const Service = require("../models/Service.model");
 const Notification = require("../models/Notification.model");
 const SlotLock = require("../models/SlotLock.model");
 const nodemailer = require("nodemailer");
+const emailQueue = require("../queues/emailQueue");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -17,7 +18,7 @@ const STATIC_LOCATION = "382860 city:vijapur house number 123";
 let notificationMessage = "";
 
 //creat bookin (user)
- 
+
 exports.createBooking = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -90,7 +91,7 @@ exports.getBookingStatus = async (req, res) => {
   }
 };
 
- // Get all bookings (Admin only) with cursor pagination
+// Get all bookings (Admin only) with cursor pagination
 exports.getAllBookings = async (req, res) => {
   try {
     let { limit = 10, cursor } = req.query;
@@ -100,7 +101,7 @@ exports.getAllBookings = async (req, res) => {
 
     // If cursor exists, load next page
     if (cursor) {
-      query._id = { $lt: cursor }; 
+      query._id = { $lt: cursor };
     }
 
     // Fetch one extra record to check hasMore
@@ -191,7 +192,7 @@ exports.updateBooking = async (req, res) => {
   try {
     const { service, date, timeSlot } = req.body;
     const bookingId = req.params.id;
-    const userId = req.user.id; 
+    const userId = req.user.id;
 
     const booking = await Booking.findById(bookingId);
     if (!booking) {
@@ -303,7 +304,7 @@ exports.updateBookingStatus = async (req, res) => {
     if (booking.status === "confirmed") {
       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been confirmed.`;
       subject = "Your Booking is Confirmed!";
- text = `Hi ${name || "User"},
+      text = `Hi ${name || "User"},
 
 Your booking for "${serviceName}" has been confirmed.
 
@@ -314,16 +315,18 @@ Your booking for "${serviceName}" has been confirmed.
 ✅ Check your status in your profile.
 
 Thank you for booking with us!
-SalonBlis App Team`;    } else if (booking.status === "cancelled") {
+SalonBlis App Team`;
+    } else if (booking.status === "cancelled") {
       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.`;
       subject = "Your Booking Has Been Cancelled";
- text = `Hi ${name || "User"},
+      text = `Hi ${name || "User"},
 
 Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.
 
 If this was unexpected, please reach out to our support team.
 
-SalonBlis App Team`;    }
+SalonBlis App Team`;
+    }
 
     // Save Notification
     if (notificationMessage) {
@@ -336,16 +339,28 @@ SalonBlis App Team`;    }
     // Send email 
     if (subject && text) {
       const msg = {
-                from: `"SalonBlis" <${process.env.EMAIL_USER}>`,
+        from: `"SalonBlis" <${process.env.EMAIL_USER}>`,
         to: email,
         subject,
         text,
         html: `<p>${text.replace(/\n/g, "<br/>")}</p>`,
       };
-
-      transporter.sendMail(msg)
-        .then(() => console.log("Email sent successfully"))
-        .catch(err => console.error("Nodemailer email error:", err));
+      //producer
+      await emailQueue.add("send-booking-email", {
+        to: email,
+        subject,
+        text,
+        html: `<p>${text.replace(/\n/g, "<br/>")}</p>`,
+      },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 5000,
+          },
+          removeOnComplete: true,
+          removeOnFail: false,
+        });
     }
 
     res.status(200).json({ message: "Booking status updated", booking });
@@ -400,14 +415,14 @@ exports.getBookedSlots = async (req, res) => {
   const userId = req.user?.id;
 
   // ✅ Only count non-cancelled bookings as "booked"
-  const bookings = await Booking.find({ 
-    date, 
+  const bookings = await Booking.find({
+    date,
     status: { $ne: "cancelled" }  // 👈 ADD THIS LINE
   }).select("timeSlot");
 
-  const locks = await SlotLock.find({ 
-    date, 
-    user: { $ne: userId } 
+  const locks = await SlotLock.find({
+    date,
+    user: { $ne: userId }
   }).select("timeSlot");
 
   const bookedSlots = bookings.map(b => b.timeSlot);
