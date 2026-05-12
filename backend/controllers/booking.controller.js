@@ -270,14 +270,18 @@ exports.updateBooking = async (req, res) => {
 exports.updateBookingStatus = async (req, res) => {
   try {
     if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Only admins can update booking status" });
+      return res.status(403).json({
+        message: "Only admins can update booking status",
+      });
     }
 
     const booking = await Booking.findById(req.params.id)
       .populate("user")
       .populate("service");
 
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
 
     booking.status = req.body.status;
     await booking.save();
@@ -299,11 +303,12 @@ exports.updateBookingStatus = async (req, res) => {
 
     let subject = "";
     let text = "";
+    let notificationMessage = "";
 
     if (booking.status === "confirmed") {
       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been confirmed.`;
       subject = "Your Booking is Confirmed!";
- text = `Hi ${name || "User"},
+      text = `Hi ${name || "User"},
 
 Your booking for "${serviceName}" has been confirmed.
 
@@ -314,44 +319,58 @@ Your booking for "${serviceName}" has been confirmed.
 ✅ Check your status in your profile.
 
 Thank you for booking with us!
-SalonBlis App Team`;    } else if (booking.status === "cancelled") {
+SalonBlis App Team`;
+    } else if (booking.status === "cancelled") {
       notificationMessage = `Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.`;
       subject = "Your Booking Has Been Cancelled";
- text = `Hi ${name || "User"},
+      text = `Hi ${name || "User"},
 
 Your booking for "${serviceName}" on ${date} at ${time} has been cancelled.
 
 If this was unexpected, please reach out to our support team.
 
-SalonBlis App Team`;    }
-
-    // Save Notification
-    if (notificationMessage) {
-      await Notification.create({
-        user: booking.user._id,
-        message: notificationMessage,
-      });
+SalonBlis App Team`;
     }
 
-    // Send email 
+    let createdNotification = null;
+
+    if (notificationMessage) {
+      createdNotification = await Notification.create({
+        user: booking.user._id,
+        message: notificationMessage,
+        read: false,
+      });
+
+      const io = req.app.get("io");
+      io.to(`user_${booking.user._id}`).emit("new_notification", createdNotification);
+    }
+
     if (subject && text) {
       const msg = {
-                from: `"SalonBlis" <${process.env.EMAIL_USER}>`,
+        from: `"SalonBlis" <${process.env.EMAIL_USER}>`,
         to: email,
         subject,
         text,
         html: `<p>${text.replace(/\n/g, "<br/>")}</p>`,
       };
 
-      transporter.sendMail(msg)
+      transporter
+        .sendMail(msg)
         .then(() => console.log("Email sent successfully"))
-        .catch(err => console.error("Nodemailer email error:", err));
+        .catch((err) => console.error("Nodemailer email error:", err));
     }
 
-    res.status(200).json({ message: "Booking status updated", booking });
+    res.status(200).json({
+      message: "Booking status updated",
+      booking,
+      notification: createdNotification,
+    });
   } catch (error) {
     console.error("Error updating booking status:", error);
-    res.status(500).json({ message: "Error updating booking status", error });
+    res.status(500).json({
+      message: "Error updating booking status",
+      error: error.message,
+    });
   }
 };
 
